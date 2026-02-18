@@ -1,1 +1,11 @@
-
+ipywidgets
+ipykernel
+joblib
+matplotlib
+numpy
+pandas
+plotly
+pyarrow
+scikit-learn
+seaborn
+tqdm
