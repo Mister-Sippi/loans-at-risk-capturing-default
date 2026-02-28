@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Callable
 import pandas as pd
 
@@ -7,19 +8,23 @@ import pandas as pd
 # Logging
 # -------------------------------
 
-def log_messages(message: str, log_file: str) -> None:
+def log_messages(message: str, log_file: Path | str) -> None:
     """Log a message with a UTC timestamp to a file."""
     try:
+        log_path = Path(log_file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        
         timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         full_message = f"[{timestamp}] {message}\n"
         with open(log_file, "a", encoding="utf-8") as log_file_handle:
             log_file_handle.write(full_message)
-    except Exception as error:
+    except Exception as exc:
         # Logging never breaks the pipeline
-        print(f"[Logging Failure] {error}")
+        print(f"[Logging Failure] {exc}")
+        raise
 
 
-def get_logger(log_file: str | None) -> Callable[[str], None]:
+def get_logger(log_file: Path | str | None) -> Callable[[str], None]:
     """
     Return a lightweight logger function.
 
@@ -30,9 +35,11 @@ def get_logger(log_file: str | None) -> Callable[[str], None]:
         def log(_: str) -> None:
             return
         return log
+    
+    log_path = Path(log_file)
 
     def log(message: str) -> None:
-        log_messages(message, log_file)
+        log_messages(message, log_path)
 
     return log
 
@@ -105,6 +112,7 @@ def log_category_differences(
 
         log("===== END CATEGORICAL VALUE COMPARISON =====")
 
-    except Exception as error:
-        log(f"Error in log_category_differences: {error}")
+    except Exception as exc:
+        if log is not None:
+            log(f"Error in log_category_differences: {exc}")
         raise

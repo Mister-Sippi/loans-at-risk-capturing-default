@@ -1,7 +1,7 @@
 from typing import Callable, Sequence
 import pandas as pd
 
-from python.logging_utils import get_logger
+from config.logging import get_logger
 
 
 def build_terminal_cohort(

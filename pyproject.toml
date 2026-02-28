@@ -1,0 +1,8 @@
+[project]
+name = "loans_at_risk"
+version = "0.1.0"
+description = "Loan default risk ETL pipeline"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]
