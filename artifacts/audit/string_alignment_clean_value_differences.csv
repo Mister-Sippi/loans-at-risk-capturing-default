@@ -1,0 +1,4 @@
+column_name,value,present_in
+loan_status,does_not_meet_the_credit_policy._status:charged_off,train_only
+loan_status,does_not_meet_the_credit_policy._status:fully_paid,train_only
+loan_status,issued,test_only

@@ -1,6 +1,8 @@
+from __future__ import annotations
+
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Mapping, Any, Optional
 import pandas as pd
 
 
@@ -44,75 +46,76 @@ def get_logger(log_file: Path | str | None) -> Callable[[str], None]:
     return log
 
 
-def log_category_differences(
-    categorical_value_differences: dict[str, pd.DataFrame],
+def log_dataframe_checkpoint(
+    dataframe: pd.DataFrame,
     *,
-    max_values_to_log: int = 10,
-    log_file: str | None = None,
+    dataset_name: str,
+    checkpoint_name: str,
+    log: Callable[[str], None],
+    id_column_name: Optional[str] = None,
+    extra_metrics: Optional[Mapping[str, Any]] = None,
 ) -> None:
     """
-    Log categorical differences between training and test datasets.
+    Log a high-signal checkpoint summary for a dataframe.
 
-    For each column:
-    - total categories
-    - count only in training
-    - count only in test
-    - sample of differing values (truncated)
-
-    Designed for schema validation and drift monitoring.
+    Intended usage:
+    - call after major phases (row_id creation, structural drops, normalization, save)
+    - log only metrics that detect breakage or unintended drift
     """
-
-    log = get_logger(log_file)
-
     try:
-        if not categorical_value_differences:
-            log("log_category_differences: no categorical differences provided.")
-            return
+        row_count = int(dataframe.shape[0])
+        column_count = int(dataframe.shape[1])
 
-        log("===== CATEGORICAL VALUE COMPARISON SUMMARY =====")
+        base_message_parts = [
+            f"[{checkpoint_name}][{dataset_name}]",
+            f"rows={row_count}",
+            f"cols={column_count}",
+        ]
 
-        for column_name, comparison_df in categorical_value_differences.items():
+        # Optional id-column checks (only if caller requested one)
+        if id_column_name:
+            id_column_present = id_column_name in dataframe.columns
+            base_message_parts.append(f"{id_column_name}_present={id_column_present}")
 
-            if comparison_df.empty:
-                log(f"{column_name}: no categories found.")
-                continue
+            id_null_count: Optional[int] = None
+            id_is_unique: Optional[bool] = None
 
-            only_in_training = comparison_df[
-                (comparison_df["present_in_training"]) &
-                (~comparison_df["present_in_test"])
-            ]["category"].tolist()
+            if id_column_present:
+                id_null_count = int(dataframe[id_column_name].isna().sum())
+                id_is_unique = dataframe[id_column_name].is_unique
 
-            only_in_test = comparison_df[
-                (~comparison_df["present_in_training"]) &
-                (comparison_df["present_in_test"])
-            ]["category"].tolist()
-
-            total_categories = len(comparison_df)
-
-            log(
-                f"{column_name} | "
-                f"total={total_categories} | "
-                f"only_in_training={len(only_in_training)} | "
-                f"only_in_test={len(only_in_test)}"
-            )
-
-            if only_in_training:
-                log(
-                    f"  sample_only_in_training: "
-                    + ", ".join(only_in_training[:max_values_to_log])
-                    + (" ..." if len(only_in_training) > max_values_to_log else "")
+                base_message_parts.extend(
+                    [
+                        f"{id_column_name}_nulls={id_null_count}",
+                        f"{id_column_name}_unique={id_is_unique}",
+                    ]
                 )
 
-            if only_in_test:
+        # Extra metrics
+        if extra_metrics:
+            for metric_name, metric_value in extra_metrics.items():
+                base_message_parts.append(f"{metric_name}={metric_value}")
+
+        log(" | ".join(base_message_parts))
+
+        # Warnings (only if id column requested + present)
+        if id_column_name and (id_column_name in dataframe.columns):
+            if id_null_count is not None and id_null_count > 0:
                 log(
-                    f"  sample_only_in_test: "
-                    + ", ".join(only_in_test[:max_values_to_log])
-                    + (" ..." if len(only_in_test) > max_values_to_log else "")
+                    f"[{checkpoint_name}][{dataset_name}][warning] "
+                    f"{id_column_name} contains nulls (nulls={id_null_count})."
                 )
 
-        log("===== END CATEGORICAL VALUE COMPARISON =====")
+            if id_is_unique is False:
+                log(
+                    f"[{checkpoint_name}][{dataset_name}][warning] "
+                    f"{id_column_name} is not unique."
+                )
 
     except Exception as exc:
-        if log is not None:
-            log(f"Error in log_category_differences: {exc}")
+        log(
+            f"[log_dataframe_checkpoint][error] "
+            f"Failed checkpoint logging for dataset_name={dataset_name}, checkpoint_name={checkpoint_name}. "
+            f"Error={type(exc).__name__}: {exc}"
+        )
         raise

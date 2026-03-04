@@ -14,7 +14,10 @@ from config.logging import get_logger
 # =============================================================================
 
 
-def initial_inspection(df: pd.DataFrame, log_file: str | None = None) -> dict[str, Any]:
+def initial_inspection(
+    df: pd.DataFrame, 
+    log_file: str | None = None
+) -> dict[str, Any]:
     """
     Perform an initial inspection of a DataFrame.
 
@@ -141,17 +144,12 @@ def audit_string_columns(
     log_file: str | None = None,
 ) -> pd.DataFrame:
     """
-    Create an audit table for string/object columns.
+    Create an audit table for string-like columns.
 
-    Returns a DataFrame with:
-    - column_name
-    - dtype
-    - unique_count_including_null
-    - unique_count_non_null
-    - null_percent
-    - sample_values (up to sample_size distinct non-null values)
-
-    Intended for structural inspection, not feature engineering.
+    Audited dtypes:
+    - object
+    - string
+    - category
     """
     log = get_logger(log_file)
 
@@ -162,10 +160,11 @@ def audit_string_columns(
         if sample_size <= 0:
             raise ValueError("sample_size must be > 0")
 
-        string_columns = df.select_dtypes(include=["object", "string"]).columns.tolist()
+        audited_dtypes = ["object", "string", "category"]
+        string_like_columns = df.select_dtypes(include=audited_dtypes).columns.tolist()
 
-        if not string_columns:
-            log("[audit_string_columns] no string/object columns found")
+        if not string_like_columns:
+            log("[audit_string_columns] no string-like columns found")
             return pd.DataFrame(
                 columns=[
                     "column_name",
@@ -179,7 +178,7 @@ def audit_string_columns(
 
         records: list[dict[str, Any]] = []
 
-        for column_name in string_columns:
+        for column_name in string_like_columns:
             series = df[column_name]
 
             unique_count_including_null = int(series.nunique(dropna=False))
@@ -208,15 +207,26 @@ def audit_string_columns(
 
         audit_dataframe = (
             pd.DataFrame(records)
-            .sort_values(by=["unique_count_non_null", "null_percent"], ascending=[False, False])
+            .sort_values(
+                by=["unique_count_non_null", "null_percent"],
+                ascending=[False, False],
+            )
             .reset_index(drop=True)
         )
 
-        log(f"[audit_string_columns] done | audited_cols={len(audit_dataframe)}")
+        log(
+            "[audit_string_columns] done | "
+            f"audited_cols={int(audit_dataframe.shape[0])} "
+            f"dtypes={audited_dtypes}"
+        )
+
         return audit_dataframe
 
-    except Exception as exc:
-        log(f"[audit_string_columns] failed | error={exc}")
+    except Exception as exception:
+        log(
+            f"[audit_string_columns][error] "
+            f"Error={type(exception).__name__}: {exception}"
+        )
         raise
 
 
@@ -510,6 +520,23 @@ def create_row_identifier(
         raise
 
 
+def _format_column_list(
+    columns: list[str], 
+    max_items: int = 25
+) -> str:
+    """
+    Format a list of column names for logging, truncating long lists
+    to keep log output readable.
+    """
+    if len(columns) <= max_items:
+        return ", ".join(columns)
+
+    head = ", ".join(columns[:max_items])
+    remaining_count = len(columns) - max_items
+
+    return f"{head}, ... (+{remaining_count} more)"
+
+
 def drop_columns_with_logging(
     dataframe: pd.DataFrame,
     columns_to_drop: list[str],
@@ -534,28 +561,39 @@ def drop_columns_with_logging(
         existing_columns = set(dataframe.columns)
         requested_columns = list(dict.fromkeys(columns_to_drop))  # de-duplicate, preserve order
 
-        dropped_columns = [column_name for column_name in requested_columns if column_name in existing_columns]
-        missing_columns = [column_name for column_name in requested_columns if column_name not in existing_columns]
+        dropped_columns = [
+            column_name for column_name in requested_columns if column_name in existing_columns
+        ]
+
+        missing_columns = [
+            column_name for column_name in requested_columns if column_name not in existing_columns
+        ]
 
         transformed_dataframe = dataframe.drop(columns=requested_columns, errors=errors)
+
         shape_after = transformed_dataframe.shape
 
-        log(f"Dropping columns | dataset={dataset_name}")
-        log(f"Shape before: {shape_before} | Shape after: {shape_after}")
+        log(f"[drop_columns] dataset={dataset_name}")
+        log(f"[drop_columns] shape_before={shape_before} shape_after={shape_after}")
+
         log(
-            f"Requested: {len(requested_columns)} | Dropped: {len(dropped_columns)} | Missing: {len(missing_columns)}"
+            f"[drop_columns] requested={len(requested_columns)} "
+            f"dropped={len(dropped_columns)} missing={len(missing_columns)} errors={errors}"
         )
 
         if dropped_columns:
-            log("Dropped columns: " + ", ".join(dropped_columns))
+            log("[drop_columns] dropped_columns=" + _format_column_list(dropped_columns))
 
         if missing_columns:
-            log("Missing columns (not present): " + ", ".join(missing_columns))
+            log("[drop_columns] missing_columns=" + _format_column_list(missing_columns))
 
         return transformed_dataframe
 
     except Exception as exc:
-        log(f"Error while dropping columns | dataset={dataset_name}: {exc}")
+        log(
+            f"[drop_columns_with_logging][error] dataset={dataset_name} "
+            f"Error={type(exc).__name__}: {exc}"
+        )
         raise
 
 
@@ -567,6 +605,8 @@ def apply_credit_sentinel_encoding(
 ) -> pd.DataFrame:
     """
     Apply sentinel encoding to credit recency variables.
+    - Adds indicator columns: has_<col> (int8)
+    - Fills missing values in <col> with sentinel_value
     """
     log = get_logger(log_file)
 
@@ -575,29 +615,43 @@ def apply_credit_sentinel_encoding(
             raise ValueError("df must not be None")
 
         transformed_dataframe = df.copy()
-        log("Applying credit sentinel encoding")
+        log("[credit_sentinel_encoding] start")
+
+        missing_configured_columns: list[str] = []
 
         for column_name in credit_recency_columns:
             if column_name not in transformed_dataframe.columns:
-                log(f"Credit recency column not found (skipped): {column_name}")
+                missing_configured_columns.append(column_name)
                 continue
 
             indicator_column_name = f"has_{column_name}"
             missing_value_count = int(transformed_dataframe[column_name].isna().sum())
 
-            transformed_dataframe[indicator_column_name] = transformed_dataframe[column_name].notna().astype("int8")
+            transformed_dataframe[indicator_column_name] = (
+                transformed_dataframe[column_name].notna().astype("int8")
+            )
             transformed_dataframe[column_name] = transformed_dataframe[column_name].fillna(sentinel_value)
 
             log(
-                f"Encoded {column_name}: missing={missing_value_count} | "
-                f"sentinel={sentinel_value} | indicator={indicator_column_name}"
+                f"[credit_sentinel_encoding] column={column_name} "
+                f"missing={missing_value_count} sentinel={sentinel_value} "
+                f"indicator={indicator_column_name}"
             )
 
-        log("Credit sentinel encoding completed")
+        if missing_configured_columns:
+            log(
+                f"[credit_sentinel_encoding][error] Missing configured columns: {missing_configured_columns}"
+            )
+            raise KeyError(f"Missing configured credit recency columns: {missing_configured_columns}")
+
+        log("[credit_sentinel_encoding] completed")
         return transformed_dataframe
 
     except Exception as exc:
-        log(f"Error in apply_credit_sentinel_encoding: {exc}")
+        log(
+            f"[credit_sentinel_encoding][error] "
+            f"Error={type(exc).__name__}: {exc}"
+        )
         raise
 
 
@@ -651,63 +705,102 @@ def convert_month_year_columns_to_datetime(
 
 
 def transform_emp_length(
-    df: pd.DataFrame,
+    dataframe: pd.DataFrame,
     column_name: str = "emp_length",
     output_column_name: str = "emp_length_years",
     log_file: str | None = None,
 ) -> pd.DataFrame:
     """
     Normalize LendingClub-style employment length strings into numeric years.
+
+    Policy
+    ------
+    - Known missing tokens (e.g. "n/a") are treated as missing values.
+    - Any other unexpected non-null values raise an error.
     """
+
     log = get_logger(log_file)
 
     try:
-        if df is None:
-            raise ValueError("df must not be None")
+        if dataframe is None:
+            raise ValueError("dataframe must not be None")
 
-        if column_name not in df.columns:
-            log(f"transform_emp_length: column not found (skipped): {column_name}")
-            return df
+        if column_name not in dataframe.columns:
+            log(f"[transform_emp_length] column not found (skipped): {column_name}")
+            return dataframe
 
-        transformed_dataframe = df.copy()
+        transformed_dataframe = dataframe.copy()
 
         raw_series = transformed_dataframe[column_name]
-        normalized_series = raw_series.astype("string").str.strip().str.lower()
 
-        mapping: dict[str, int] = {"< 1 year": 0, "10+ years": 10}
+        normalized_series = (
+            raw_series
+            .astype("string")
+            .str.strip()
+            .str.lower()
+        )
+
+        # Define known missing value tokens and replace them with pd.NA
+        missing_tokens = {"n/a", "na", "n.a."}
+        normalized_series = normalized_series.replace(list(missing_tokens), pd.NA)
+
+        employment_length_mapping: dict[str, int] = {
+            "< 1 year": 0,
+            "10+ years": 10,
+        }
+
+        # Ensure mapping keys match normalized casing
+        employment_length_mapping = {
+            mapping_key.lower(): mapping_value
+            for mapping_key, mapping_value in employment_length_mapping.items()
+        }
+
         for year_value in range(1, 10):
-            mapping[f"{year_value} year"] = year_value
-            mapping[f"{year_value} years"] = year_value
+            employment_length_mapping[f"{year_value} year"] = year_value
+            employment_length_mapping[f"{year_value} years"] = year_value
 
         non_null_values = normalized_series.dropna()
-        unexpected_values = sorted(set(non_null_values.unique()) - set(mapping.keys()))
+
+        unexpected_values = sorted(
+            set(non_null_values.unique()) - set(employment_length_mapping.keys())
+        )
+
         if unexpected_values:
             log(
-                "transform_emp_length: unexpected non-null values detected: "
+                "[transform_emp_length][error] unexpected non-null values detected: "
                 + ", ".join(unexpected_values[:25])
                 + (" ..." if len(unexpected_values) > 25 else "")
             )
+
             raise ValueError(
                 f"Unexpected values in '{column_name}': {unexpected_values[:10]}"
                 + (" (and more)" if len(unexpected_values) > 10 else "")
             )
 
-        mapped_series = normalized_series.map(mapping)
+        mapped_series = normalized_series.map(employment_length_mapping)
+
         transformed_dataframe[output_column_name] = mapped_series.astype("Float32")
 
         total_rows = int(len(transformed_dataframe))
-        input_nulls = int(raw_series.isna().sum())
-        output_nulls = int(transformed_dataframe[output_column_name].isna().sum())
+        input_null_count = int(raw_series.isna().sum())
+        normalized_null_count = int(normalized_series.isna().sum())
+        output_null_count = int(transformed_dataframe[output_column_name].isna().sum())
 
         log(
-            f"transform_emp_length: created '{output_column_name}' from '{column_name}' | "
-            f"rows={total_rows} | input_nulls={input_nulls} | output_nulls={output_nulls}"
+            f"[transform_emp_length] created '{output_column_name}' from '{column_name}' | "
+            f"rows={total_rows} | "
+            f"input_nulls={input_null_count} | "
+            f"normalized_nulls={normalized_null_count} | "
+            f"output_nulls={output_null_count}"
         )
 
         return transformed_dataframe
 
-    except Exception as exc:
-        log(f"Error in transform_emp_length: {exc}")
+    except Exception as exception:
+        log(
+            f"[transform_emp_length][error] "
+            f"Error={type(exception).__name__}: {exception}"
+        )
         raise
 
 
@@ -889,6 +982,111 @@ def apply_categorical_mapping(
 
     except Exception as exc:
         log(f"Error in apply_categorical_mapping: {exc}")
+        raise
+   
+
+def parse_term_column(
+    dataframe: pd.DataFrame,
+    term_column: str,
+    new_column_name: str,
+    log_file: str | None = None,
+) -> pd.DataFrame:
+    """
+    Parse LendingClub loan term (e.g. '36 months') into numeric months.
+    """
+    log = get_logger(log_file)
+
+    try:
+        if dataframe is None:
+            raise ValueError("dataframe must not be None")
+
+        transformed_dataframe = dataframe.copy()
+
+        log("[parse_term_column] parsing loan term")
+
+        transformed_dataframe[new_column_name] = (
+            transformed_dataframe[term_column]
+            .astype("string")
+            .str.strip()
+            .str.extract(r"(\d+)")[0]
+            .astype("Int16")
+        )
+
+        log(f"[parse_term_column] created column={new_column_name}")
+
+        return transformed_dataframe
+
+    except Exception as exc:
+        log(
+            f"[parse_term_column][error] "
+            f"Error={type(exc).__name__}: {exc}"
+        )
+        raise
+
+
+def cast_categorical_columns(
+    dataframe_train: pd.DataFrame,
+    dataframe_test: pd.DataFrame,
+    column_names: list[str],
+    log_file: str | None = None,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Cast selected columns to pandas categorical dtype with a shared
+    category space across train and test datasets.
+    """
+    log = get_logger(log_file)
+
+    try:
+        if dataframe_train is None or dataframe_test is None:
+            raise ValueError("Input dataframes must not be None")
+
+        train_df = dataframe_train.copy()
+        test_df = dataframe_test.copy()
+
+        log("[cast_categorical_columns] casting string -> category")
+
+        for column_name in column_names:
+
+            if column_name not in train_df.columns:
+                log(f"Train missing categorical column (skipped): {column_name}")
+                continue
+
+            if column_name not in test_df.columns:
+                log(f"Test missing categorical column (skipped): {column_name}")
+                continue
+
+            train_df[column_name] = train_df[column_name].astype("string")
+            test_df[column_name] = test_df[column_name].astype("string")
+
+            train_values = train_df[column_name].dropna().unique().tolist()
+            test_values = test_df[column_name].dropna().unique().tolist()
+
+            combined_categories = sorted(set(train_values) | set(test_values))
+
+            train_df[column_name] = pd.Categorical(
+                train_df[column_name],
+                categories=combined_categories
+            )
+
+            test_df[column_name] = pd.Categorical(
+                test_df[column_name],
+                categories=combined_categories
+            )
+
+            log(
+                f"[cast_categorical_columns] column={column_name} "
+                f"train_unique={len(train_values)} "
+                f"test_unique={len(test_values)} "
+                f"combined={len(combined_categories)}"
+            )
+
+        return train_df, test_df
+
+    except Exception as exc:
+        log(
+            f"[cast_categorical_columns][error] "
+            f"Error={type(exc).__name__}: {exc}"
+        )
         raise
 
 
