@@ -231,8 +231,8 @@ def audit_string_columns(
 
 
 def compare_categorical_column_values(
-    training_dataframe: pd.DataFrame,
-    test_dataframe: pd.DataFrame,
+    df_train: pd.DataFrame,
+    df_test: pd.DataFrame,
     column_name: str,
     log_file: str | None = None,
 ) -> pd.DataFrame:
@@ -249,25 +249,25 @@ def compare_categorical_column_values(
     log = get_logger(log_file)
 
     try:
-        if training_dataframe is None or test_dataframe is None:
-            raise ValueError("training_dataframe and test_dataframe must not be None")
+        if df_train is None or df_test is None:
+            raise ValueError("df_train and df_test must not be None")
 
         if not column_name or not str(column_name).strip():
             raise ValueError("column_name must be a non-empty string")
 
-        if column_name not in training_dataframe.columns:
+        if column_name not in df_train.columns:
             raise ValueError(f"Column not found in training dataset: {column_name}")
 
-        if column_name not in test_dataframe.columns:
+        if column_name not in df_test.columns:
             raise ValueError(f"Column not found in test dataset: {column_name}")
 
         log(f"[categorical_compare] start | column='{column_name}'")
 
         training_values = set(
-            training_dataframe[column_name].dropna().astype("string").str.strip().unique()
+            df_train[column_name].dropna().astype("string").str.strip().unique()
         )
         test_values = set(
-            test_dataframe[column_name].dropna().astype("string").str.strip().unique()
+            df_test[column_name].dropna().astype("string").str.strip().unique()
         )
 
         all_values = sorted(training_values.union(test_values))
@@ -294,8 +294,8 @@ def compare_categorical_column_values(
 
 
 def build_combined_schema(
-    train_dataframe: pd.DataFrame,
-    test_dataframe: pd.DataFrame,
+    df_train: pd.DataFrame,
+    df_test: pd.DataFrame,
     stage_name: str,
     log: Callable[[str], None],
 ) -> pd.DataFrame:
@@ -313,18 +313,18 @@ def build_combined_schema(
     Logs structural deltas.
     """
     try:
-        if train_dataframe is None or test_dataframe is None:
-            raise ValueError("train_dataframe and test_dataframe must not be None")
+        if df_train is None or df_test is None:
+            raise ValueError("df_train and df_test must not be None")
 
         if not stage_name or not str(stage_name).strip():
             raise ValueError("stage_name must be a non-empty string")
 
         train_schema = (
-            train_dataframe.dtypes.rename("train_dtype").reset_index().rename(columns={"index": "column_name"})
+            df_train.dtypes.rename("train_dtype").reset_index().rename(columns={"index": "column_name"})
         )
 
         test_schema = (
-            test_dataframe.dtypes.rename("test_dtype").reset_index().rename(columns={"index": "column_name"})
+            df_test.dtypes.rename("test_dtype").reset_index().rename(columns={"index": "column_name"})
         )
 
         combined_schema = pd.merge(train_schema, test_schema, on="column_name", how="outer")
@@ -490,7 +490,7 @@ def build_structural_issues_report(
 
 
 def create_row_identifier(
-    dataframe: pd.DataFrame,
+    df: pd.DataFrame,
     id_column_name: str = "row_id",
     log_file: str | None = None,
 ) -> pd.DataFrame:
@@ -502,14 +502,14 @@ def create_row_identifier(
     log = get_logger(log_file)
 
     try:
-        if dataframe is None:
-            raise ValueError("dataframe must not be None")
+        if df is None:
+            raise ValueError("df must not be None")
 
-        if id_column_name in dataframe.columns:
+        if id_column_name in df.columns:
             log(f"Row identifier already exists: {id_column_name}")
-            return dataframe
+            return df
 
-        transformed_dataframe = dataframe.copy()
+        transformed_dataframe = df.copy()
         transformed_dataframe.insert(0, id_column_name, range(1, len(transformed_dataframe) + 1))
 
         log(f"Row identifier created: {id_column_name} | Total rows: {len(transformed_dataframe)}")
@@ -538,7 +538,7 @@ def _format_column_list(
 
 
 def drop_columns_with_logging(
-    dataframe: pd.DataFrame,
+    df: pd.DataFrame,
     columns_to_drop: list[str],
     dataset_name: str,
     log_file: str | None = None,
@@ -550,15 +550,15 @@ def drop_columns_with_logging(
     log = get_logger(log_file)
 
     try:
-        if dataframe is None:
-            raise ValueError("dataframe must not be None")
+        if df is None:
+            raise ValueError("df must not be None")
 
         if not dataset_name or not str(dataset_name).strip():
             raise ValueError("dataset_name must be a non-empty string")
 
-        shape_before = dataframe.shape
+        shape_before = df.shape
 
-        existing_columns = set(dataframe.columns)
+        existing_columns = set(df.columns)
         requested_columns = list(dict.fromkeys(columns_to_drop))  # de-duplicate, preserve order
 
         dropped_columns = [
@@ -569,7 +569,7 @@ def drop_columns_with_logging(
             column_name for column_name in requested_columns if column_name not in existing_columns
         ]
 
-        transformed_dataframe = dataframe.drop(columns=requested_columns, errors=errors)
+        transformed_dataframe = df.drop(columns=requested_columns, errors=errors)
 
         shape_after = transformed_dataframe.shape
 
@@ -656,7 +656,7 @@ def apply_credit_sentinel_encoding(
 
 
 def convert_month_year_columns_to_datetime(
-    dataframe: pd.DataFrame,
+    df: pd.DataFrame,
     column_names: list[str],
     datetime_format: str = "%b-%y",
     log_file: str | None = None,
@@ -667,10 +667,10 @@ def convert_month_year_columns_to_datetime(
     log = get_logger(log_file)
 
     try:
-        if dataframe is None:
-            raise ValueError("dataframe must not be None")
+        if df is None:
+            raise ValueError("df must not be None")
 
-        transformed_dataframe = dataframe.copy()
+        transformed_dataframe = df.copy()
 
         requested_columns = list(dict.fromkeys(column_names))
         log(f"Starting month-year to datetime conversion for {len(requested_columns)} columns")
@@ -705,7 +705,7 @@ def convert_month_year_columns_to_datetime(
 
 
 def transform_emp_length(
-    dataframe: pd.DataFrame,
+    df: pd.DataFrame,
     column_name: str = "emp_length",
     output_column_name: str = "emp_length_years",
     log_file: str | None = None,
@@ -722,14 +722,14 @@ def transform_emp_length(
     log = get_logger(log_file)
 
     try:
-        if dataframe is None:
-            raise ValueError("dataframe must not be None")
+        if df is None:
+            raise ValueError("df must not be None")
 
-        if column_name not in dataframe.columns:
+        if column_name not in df.columns:
             log(f"[transform_emp_length] column not found (skipped): {column_name}")
-            return dataframe
+            return df
 
-        transformed_dataframe = dataframe.copy()
+        transformed_dataframe = df.copy()
 
         raw_series = transformed_dataframe[column_name]
 
@@ -848,7 +848,7 @@ def normalize_home_ownership(
 
 
 def normalize_text_columns(
-    dataframe: pd.DataFrame,
+    df: pd.DataFrame,
     columns_to_normalize: Iterable[str],
     *,
     lowercase: bool = True,
@@ -863,10 +863,10 @@ def normalize_text_columns(
     log: Callable[[str], None] = get_logger(log_file)
 
     try:
-        if dataframe is None:
-            raise ValueError("dataframe must not be None")
+        if df is None:
+            raise ValueError("df must not be None")
 
-        normalized_dataframe = dataframe.copy()
+        normalized_dataframe = df.copy()
 
         requested_columns = list(dict.fromkeys(columns_to_normalize))
         existing_columns = [c for c in requested_columns if c in normalized_dataframe.columns]
@@ -917,7 +917,7 @@ def normalize_text_columns(
 
 
 def apply_categorical_mapping(
-    dataframe: pd.DataFrame,
+    df: pd.DataFrame,
     column_name: str,
     mapping: Mapping[str, object],
     *,
@@ -933,17 +933,17 @@ def apply_categorical_mapping(
     log = get_logger(log_file)
 
     try:
-        if dataframe is None:
-            raise ValueError("dataframe must not be None")
+        if df is None:
+            raise ValueError("df must not be None")
 
         if mapping is None:
             raise ValueError("mapping must not be None")
 
-        if column_name not in dataframe.columns:
+        if column_name not in df.columns:
             log(f"apply_categorical_mapping: column not found (skipped): {column_name}")
-            return dataframe
+            return df
 
-        transformed_dataframe = dataframe.copy()
+        transformed_dataframe = df.copy()
 
         normalized_series = transformed_dataframe[column_name].astype("string")
 
@@ -986,7 +986,7 @@ def apply_categorical_mapping(
    
 
 def parse_term_column(
-    dataframe: pd.DataFrame,
+    df: pd.DataFrame,
     term_column: str,
     new_column_name: str,
     log_file: str | None = None,
@@ -997,10 +997,10 @@ def parse_term_column(
     log = get_logger(log_file)
 
     try:
-        if dataframe is None:
-            raise ValueError("dataframe must not be None")
+        if df is None:
+            raise ValueError("df must not be None")
 
-        transformed_dataframe = dataframe.copy()
+        transformed_dataframe = df.copy()
 
         log("[parse_term_column] parsing loan term")
 
@@ -1025,8 +1025,8 @@ def parse_term_column(
 
 
 def cast_categorical_columns(
-    dataframe_train: pd.DataFrame,
-    dataframe_test: pd.DataFrame,
+    df_train: pd.DataFrame,
+    df_test: pd.DataFrame,
     column_names: list[str],
     log_file: str | None = None,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -1037,11 +1037,11 @@ def cast_categorical_columns(
     log = get_logger(log_file)
 
     try:
-        if dataframe_train is None or dataframe_test is None:
+        if df_train is None or df_test is None:
             raise ValueError("Input dataframes must not be None")
 
-        train_df = dataframe_train.copy()
-        test_df = dataframe_test.copy()
+        train_df = df_train.copy()
+        test_df = df_test.copy()
 
         log("[cast_categorical_columns] casting string -> category")
 
@@ -1127,32 +1127,32 @@ def _resolve_export_dir_and_suffix(
 
 def _run_string_audits(
     *,
-    training_dataframe: pd.DataFrame,
-    test_dataframe: pd.DataFrame,
+    df_train: pd.DataFrame,
+    df_test: pd.DataFrame,
     sample_size: int,
     log_file: str | Path | None,
     log: Callable[[str], None],
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     try:
-        if training_dataframe is None or test_dataframe is None:
-            raise ValueError("training_dataframe and test_dataframe must not be None")
+        if df_train is None or df_test is None:
+            raise ValueError("df_train and df_test must not be None")
 
         if sample_size <= 0:
             raise ValueError("sample_size must be > 0")
 
         log(
             "[string_alignment] building audits | "
-            f"sample_size={sample_size} | train_shape={training_dataframe.shape} | test_shape={test_dataframe.shape}"
+            f"sample_size={sample_size} | train_shape={df_train.shape} | test_shape={df_test.shape}"
         )
 
         train_audit_df = audit_string_columns(
-            df=training_dataframe,
+            df=df_train,
             sample_size=sample_size,
             log_file=str(log_file) if log_file is not None else None,
         )
 
         test_audit_df = audit_string_columns(
-            df=test_dataframe,
+            df=df_test,
             sample_size=sample_size,
             log_file=str(log_file) if log_file is not None else None,
         )
@@ -1170,8 +1170,8 @@ def _run_string_audits(
 
 
 def _build_combined_string_alignment_table(
-    train_audit_df: pd.DataFrame,
-    test_audit_df: pd.DataFrame,
+    df_train_audit: pd.DataFrame,
+    df_test_audit: pd.DataFrame,
     *,
     log: Callable[[str], None],
 ) -> pd.DataFrame:
@@ -1185,8 +1185,15 @@ def _build_combined_string_alignment_table(
             "sample_values",
         ]
 
-        missing_train = [c for c in required_columns if c not in train_audit_df.columns]
-        missing_test = [c for c in required_columns if c not in test_audit_df.columns]
+        missing_train = [
+            column_name for column_name in required_columns 
+            if column_name not in df_train_audit.columns
+        ]
+        
+        missing_test = [
+            column_name for column_name in required_columns 
+            if column_name not in df_test_audit.columns
+        ]
 
         if missing_train or missing_test:
             raise ValueError(
@@ -1194,7 +1201,7 @@ def _build_combined_string_alignment_table(
                 f"missing_train={missing_train} missing_test={missing_test}"
             )
 
-        train_renamed_df = train_audit_df.copy().rename(
+        train_renamed_df = df_train_audit.copy().rename(
             columns={
                 "dtype": "dtype_train",
                 "unique_count_including_null": "unique_including_null_train",
@@ -1204,7 +1211,7 @@ def _build_combined_string_alignment_table(
             }
         )
 
-        test_renamed_df = test_audit_df.copy().rename(
+        test_renamed_df = df_test_audit.copy().rename(
             columns={
                 "dtype": "dtype_test",
                 "unique_count_including_null": "unique_including_null_test",
@@ -1303,8 +1310,8 @@ def _rank_top_deltas(
 
 
 def _build_value_differences(
-    training_dataframe: pd.DataFrame,
-    test_dataframe: pd.DataFrame,
+    df_train: pd.DataFrame,
+    df_test: pd.DataFrame,
     top_deltas_df: pd.DataFrame,
     *,
     drilldown_max_columns: int,
@@ -1321,13 +1328,13 @@ def _build_value_differences(
         value_records: list[dict[str, Any]] = []
 
         for column_name in columns_to_drill:
-            in_train = column_name in training_dataframe.columns
-            in_test = column_name in test_dataframe.columns
+            in_train = column_name in df_train.columns
+            in_test = column_name in df_test.columns
 
             if in_train and in_test:
                 diff_df = compare_categorical_column_values(
-                    training_dataframe=training_dataframe,
-                    test_dataframe=test_dataframe,
+                    df_train=df_train,
+                    df_test=df_test,
                     column_name=column_name,
                     log_file=str(log_file) if log_file is not None else None,
                 )
@@ -1363,7 +1370,7 @@ def _build_value_differences(
                 log(f"[string_alignment][drilldown] '{column_name}' present in train only; sampling train values")
 
                 train_values = (
-                    training_dataframe[column_name]
+                    df_train[column_name]
                     .dropna()
                     .astype("string")
                     .str.strip()
@@ -1381,7 +1388,7 @@ def _build_value_differences(
                 log(f"[string_alignment][drilldown] '{column_name}' present in test only; sampling test values")
 
                 test_values = (
-                    test_dataframe[column_name]
+                    df_test[column_name]
                     .dropna()
                     .astype("string")
                     .str.strip()
@@ -1491,8 +1498,8 @@ def _export_alignment_reports(
 
 
 def build_string_alignment_report(
-    training_dataframe: pd.DataFrame,
-    test_dataframe: pd.DataFrame,
+    df_train: pd.DataFrame,
+    df_test: pd.DataFrame,
     *,
     sample_size: int = 5,
     top_k: int = 10,
@@ -1510,8 +1517,8 @@ def build_string_alignment_report(
     log: Callable[[str], None] = get_logger(str(log_file) if log_file is not None else None)
 
     try:
-        if training_dataframe is None or test_dataframe is None:
-            raise ValueError("training_dataframe and test_dataframe must not be None")
+        if df_train is None or df_test is None:
+            raise ValueError("df_train and df_test must not be None")
 
         if sample_size <= 0:
             raise ValueError("sample_size must be > 0")
@@ -1533,22 +1540,22 @@ def build_string_alignment_report(
 
         log(
             "[string_alignment] start | "
-            f"train_shape={training_dataframe.shape} | test_shape={test_dataframe.shape} | "
+            f"train_shape={df_train.shape} | test_shape={df_test.shape} | "
             f"sample_size={sample_size} | top_k={top_k} | drilldown_max_columns={drilldown_max_columns} | "
             f"export_suffix='{export_suffix}'"
         )
 
-        train_audit_df, test_audit_df = _run_string_audits(
-            training_dataframe=training_dataframe,
-            test_dataframe=test_dataframe,
+        df_train_audit, df_test_audit = _run_string_audits(
+            df_train=df_train,
+            df_test=df_test,
             sample_size=sample_size,
             log_file=log_file,
             log=log,
         )
 
         combined_df = _build_combined_string_alignment_table(
-            train_audit_df=train_audit_df,
-            test_audit_df=test_audit_df,
+            df_train_audit=df_train_audit,
+            df_test_audit=df_test_audit,
             log=log,
         )
 
@@ -1558,8 +1565,8 @@ def build_string_alignment_report(
         summary_df = pd.DataFrame(
             [
                 {
-                    "string_like_cols_train": int(train_audit_df.shape[0]),
-                    "string_like_cols_test": int(test_audit_df.shape[0]),
+                    "string_like_cols_train": int(df_train_audit.shape[0]),
+                    "string_like_cols_test": int(df_test_audit.shape[0]),
                     "string_like_cols_union": int(combined_df.shape[0]),
                     "string_like_cols_with_differences": int(deltas_df.shape[0]),
                     "top_k_returned": int(top_deltas_df.shape[0]),
@@ -1568,8 +1575,8 @@ def build_string_alignment_report(
         )
 
         value_differences_df = _build_value_differences(
-            training_dataframe=training_dataframe,
-            test_dataframe=test_dataframe,
+            df_train=df_train,
+            df_test=df_test,
             top_deltas_df=top_deltas_df,
             drilldown_max_columns=drilldown_max_columns,
             drilldown_top_values_per_side=drilldown_top_values_per_side,

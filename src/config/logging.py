@@ -47,7 +47,7 @@ def get_logger(log_file: Path | str | None) -> Callable[[str], None]:
 
 
 def log_dataframe_checkpoint(
-    dataframe: pd.DataFrame,
+    df: pd.DataFrame,
     *,
     dataset_name: str,
     checkpoint_name: str,
@@ -63,8 +63,8 @@ def log_dataframe_checkpoint(
     - log only metrics that detect breakage or unintended drift
     """
     try:
-        row_count = int(dataframe.shape[0])
-        column_count = int(dataframe.shape[1])
+        row_count = int(df.shape[0])
+        column_count = int(df.shape[1])
 
         base_message_parts = [
             f"[{checkpoint_name}][{dataset_name}]",
@@ -74,15 +74,15 @@ def log_dataframe_checkpoint(
 
         # Optional id-column checks (only if caller requested one)
         if id_column_name:
-            id_column_present = id_column_name in dataframe.columns
+            id_column_present = id_column_name in df.columns
             base_message_parts.append(f"{id_column_name}_present={id_column_present}")
 
             id_null_count: Optional[int] = None
             id_is_unique: Optional[bool] = None
 
             if id_column_present:
-                id_null_count = int(dataframe[id_column_name].isna().sum())
-                id_is_unique = dataframe[id_column_name].is_unique
+                id_null_count = int(df[id_column_name].isna().sum())
+                id_is_unique = df[id_column_name].is_unique
 
                 base_message_parts.extend(
                     [
@@ -99,7 +99,7 @@ def log_dataframe_checkpoint(
         log(" | ".join(base_message_parts))
 
         # Warnings (only if id column requested + present)
-        if id_column_name and (id_column_name in dataframe.columns):
+        if id_column_name and (id_column_name in df.columns):
             if id_null_count is not None and id_null_count > 0:
                 log(
                     f"[{checkpoint_name}][{dataset_name}][warning] "
