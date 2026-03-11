@@ -2,26 +2,26 @@ column_name,value,present_in
 verification_status_joint,Not Verified,test_only
 verification_status_joint,Source Verified,test_only
 verification_status_joint,Verified,test_only
-next_pymnt_d,Apr-08,train_only
-next_pymnt_d,Apr-09,train_only
-next_pymnt_d,Apr-10,train_only
-next_pymnt_d,Apr-11,train_only
-next_pymnt_d,Apr-12,train_only
-next_pymnt_d,Apr-13,train_only
-next_pymnt_d,Apr-14,train_only
-next_pymnt_d,Apr-15,train_only
-next_pymnt_d,Aug-08,train_only
-next_pymnt_d,Aug-09,train_only
-next_pymnt_d,Aug-10,train_only
-next_pymnt_d,Aug-11,train_only
-next_pymnt_d,Aug-12,train_only
-next_pymnt_d,Aug-13,train_only
-next_pymnt_d,Aug-14,train_only
-next_pymnt_d,Aug-15,train_only
-next_pymnt_d,Dec-07,train_only
-next_pymnt_d,Dec-08,train_only
-next_pymnt_d,Dec-09,train_only
-next_pymnt_d,Dec-10,train_only
+next_pymnt_d,Apr-2008,train_only
+next_pymnt_d,Apr-2009,train_only
+next_pymnt_d,Apr-2010,train_only
+next_pymnt_d,Apr-2011,train_only
+next_pymnt_d,Apr-2012,train_only
+next_pymnt_d,Apr-2013,train_only
+next_pymnt_d,Apr-2014,train_only
+next_pymnt_d,Apr-2015,train_only
+next_pymnt_d,Aug-2008,train_only
+next_pymnt_d,Aug-2009,train_only
+next_pymnt_d,Aug-2010,train_only
+next_pymnt_d,Aug-2011,train_only
+next_pymnt_d,Aug-2012,train_only
+next_pymnt_d,Aug-2013,train_only
+next_pymnt_d,Aug-2014,train_only
+next_pymnt_d,Aug-2015,train_only
+next_pymnt_d,Dec-2007,train_only
+next_pymnt_d,Dec-2008,train_only
+next_pymnt_d,Dec-2009,train_only
+next_pymnt_d,Dec-2010,train_only
 desc,"""Hello,      After graduating from college, I took an opportunity to start my own business operating a self-funded music publishing and recording company. And during the 5 years of my success in the public eye, most likely due to my lack of experience and preparedness, financially I made a few errors in judgment.      Since then I have been doing everything I can to improve my financial situation: I got a very good job at the University of California, San Diego managing several projects in Medical Education (4 years currently); I???ve been pushing aggressively for promotions at work (about 1 month away from the latest approval); I am currently in the pursuit of a second job;  I have been and continue to sell items of value in order to supplement any income; To save money on gas, I bike to work on average 1-2 times per week (approximately 50 miles round trip); and most importantly, I have turned music into a more realistic and financially stable hobby.      Below is the detail of the debt that I am hoping to consolidate.   I plan on eliminating 3 of the 4 cards.   In the years that I have had this debt, I have been late on payments maybe once or twice (occasions where I overlooked the date).  Also, a little less than one-third of this debt was built from the assistance of pursuing my bachelor???s degree.        * indicates the credit I intend on eliminating with this assistance      Card 1  $3902.38 (%15.24)      * Card 2  $3955.99 (%17.90)      *Card 3  $13,475.70 (%24.50)      *Card 4  $4777.13   (%27.74)      I appreciate any help that is out there and look forward to getting out of this hole so I can finally be able to focus on moving forward with building a family and career.  "" Borrower added on 07/03/10 > With the approved loan amount updated to $15,000, I plan on eliminating and decreasing the debt on cards #3 and 4<br/>",train_only
 desc,"""I bought a duplex in june. The only thing left to renovate is the roof and redo the sidewalk and drive way. I am secure in my job, never had any trouble with debts.""""I bought a duplex in june. The only thing left to renovate is the roof and redo the sidewalk and drive way. I am secure in my job, never had any trouble with debts."" Borrower added on 12/10/11 > Loan was relisted because my employer held verification of employment for me to sign but didnt contact me.<br>",train_only
 desc,"""My intentions are to purchase a engagement ring, hopefully in time for the holidays. I want to thank, in advance any and all who consider funding. My job is extremely stable, and I have a steady contractually binding income. My risk of layoff and or termination is extremely minuscule. I am also due for a substantial contractually guaranteed pay increase.  I also have a second job with the luxury of being able to do as much or as little as I want, this does not interfere with my primary source of income due to the second job only allowing me to schedule on days that I have off. My monthly expenses will be substantially lower due to my increase in pay. My monthly rent is extremely low.""",train_only
@@ -34,8 +34,8 @@ desc,"$32k outstanding credit card balance with American Express. Help me in my 
 desc,$3500.00 personal loan,train_only
 desc,$5000 Loan to consolidate debt.,train_only
 desc,$5800 Parents $1600 Credit Card $600 Dentist,train_only
-desc,"$6,000",train_only
 desc,"$6,000 to purchase motorcycle from a friend.",train_only
+desc,$6000,train_only
 desc,$7500 loan to finish building home.,train_only
 desc,"$8,000 of the $12,000 will be used to consolidate debt which will improve my cash flow by $170/month, even after the new $12K loan.  The remaining amount will assist my daughter who has been abandoned by her husband and is now living with us and her three kids.  Amount will specifically be used to pay legal fees, taxes and provide some Christmas funds.",train_only
 desc,"*** Re-listed for funding ***  Borrower added on 11/13/10 > This is to payoff my existing 401(k) home loan (required to be paid off in full at this point as I recently changed employers).  I have already been paying off this loan for years, so it is not a new financial responsibility for me.<br/> Borrower added on 11/13/10 > I was with my previous employer over 10 years.  This was a strategic career move and not due to any instability.  I fully expect my new job will be just as stable as my previous, otherwise I wouldn't have made the switch.  This loan will allow me to avoid tax and penalties on my existing 401(k) home loan.  Thank you all for your support!  It is much appreciated!<br/>  I have been in my new job over 1 month and it is very enjoyable and stable.  However, time is running short for me to find funding to help payoff my 401(k) loan.  I could use your help.",train_only
@@ -62,32 +62,11 @@ desc,I would like to consolidate my loan in one small monthly payment w/a low in
 desc,I would like to refinance my credit cards at a lower rate.  The high interest is making it difficult to keep to my monthly budget.,test_only
 desc,In need a little money to get me for a while after a tough semester in both graduate (clinical psychology) and law schools.  Any help would be much appreciated.,test_only
 desc,Just want to get these credit cards paid and then toss them away!,test_only
-last_pymnt_d,Apr-08,train_only
-last_pymnt_d,Apr-09,train_only
-last_pymnt_d,Apr-10,train_only
-last_pymnt_d,Apr-11,train_only
-last_pymnt_d,Apr-12,train_only
-last_pymnt_d,Apr-13,train_only
-last_pymnt_d,Apr-14,train_only
-last_pymnt_d,Aug-08,train_only
-last_pymnt_d,Aug-09,train_only
-last_pymnt_d,Aug-10,train_only
-last_pymnt_d,Aug-11,train_only
-last_pymnt_d,Aug-12,train_only
-last_pymnt_d,Aug-13,train_only
-last_pymnt_d,Aug-14,train_only
-last_pymnt_d,Dec-07,train_only
-last_pymnt_d,Dec-08,train_only
-last_pymnt_d,Dec-09,train_only
-last_pymnt_d,Dec-10,train_only
-last_pymnt_d,Dec-11,train_only
-last_pymnt_d,Dec-12,train_only
 emp_title,!st Year Apprentice Inside Wireman,train_only
 emp_title,#1 Paper Mechaine,train_only
 emp_title,#1 shop technician,train_only
 emp_title,#1Linerman,train_only
 emp_title,#2 process operator,train_only
-emp_title,#NAME?,train_only
 emp_title,$2.5B Aerospace Manufacturer,train_only
 emp_title,$260M '06 vintage technology venture capital firm,train_only
 emp_title,$2B+ Annual Sales Aerospace Manufacturer,train_only
@@ -102,6 +81,7 @@ emp_title,(CDL) Truck Driver,train_only
 emp_title,(Collaborative) Abbott Nutrition Intl,train_only
 emp_title,(FSA) maintenance,train_only
 emp_title,(Federal Gov) State Department,train_only
+emp_title,(IMS) Information Management Sepcailist,train_only
 emp_title,!st Assistant Plumbing Manager,test_only
 emp_title,"""A"" Material  Bonder",test_only
 emp_title,"""C"" Operator",test_only
@@ -119,9 +99,49 @@ emp_title,0-4,test_only
 emp_title,0-6 (Col) Comm Officer,test_only
 emp_title,0/n freash area,test_only
 emp_title,02 Leader- Mat. Flow,test_only
+emp_title,0301,test_only
 emp_title,03E,test_only
 emp_title,03a fabricator,test_only
-emp_title,0iler,test_only
+revol_util,0.01%,train_only
+revol_util,0.03%,train_only
+revol_util,0.04%,train_only
+revol_util,0.05%,train_only
+revol_util,0.12%,train_only
+revol_util,0.16%,train_only
+revol_util,0.46%,train_only
+revol_util,0.49%,train_only
+revol_util,0.54%,train_only
+revol_util,0.75%,train_only
+revol_util,0.83%,train_only
+revol_util,0.86%,train_only
+revol_util,1.88%,train_only
+revol_util,10.08%,train_only
+revol_util,10.17%,train_only
+revol_util,10.61%,train_only
+revol_util,108.9%,train_only
+revol_util,109.6%,train_only
+revol_util,11.62%,train_only
+revol_util,11.63%,train_only
+revol_util,105.6%,test_only
+revol_util,107.1%,test_only
+revol_util,107.9%,test_only
+revol_util,108.5%,test_only
+revol_util,108.6%,test_only
+revol_util,108.7%,test_only
+revol_util,109%,test_only
+revol_util,110%,test_only
+revol_util,110.2%,test_only
+revol_util,110.4%,test_only
+revol_util,110.9%,test_only
+revol_util,111.1%,test_only
+revol_util,111.6%,test_only
+revol_util,111.7%,test_only
+revol_util,111.8%,test_only
+revol_util,112.3%,test_only
+revol_util,112.8%,test_only
+revol_util,113.2%,test_only
+revol_util,113.5%,test_only
+revol_util,114.2%,test_only
 title,"""CCC""",train_only
 title,"""Discover"" ing I no longer want to ""Chase"" after my own tail.",train_only
 title,"""For those that said i couldn't""",train_only
@@ -153,135 +173,123 @@ title,Trying to come back to reality!,test_only
 title,considerate,test_only
 title,new kitchen for momma!,test_only
 title,odymeds,test_only
-last_credit_pull_d,Apr-09,train_only
-last_credit_pull_d,Apr-10,train_only
-last_credit_pull_d,Apr-11,train_only
-last_credit_pull_d,Apr-12,train_only
-last_credit_pull_d,Apr-13,train_only
-last_credit_pull_d,Apr-14,train_only
-last_credit_pull_d,Aug-07,train_only
-last_credit_pull_d,Aug-08,train_only
-last_credit_pull_d,Aug-09,train_only
-last_credit_pull_d,Aug-10,train_only
-last_credit_pull_d,Aug-11,train_only
-last_credit_pull_d,Aug-12,train_only
-last_credit_pull_d,Aug-13,train_only
-last_credit_pull_d,Aug-14,train_only
-last_credit_pull_d,Dec-07,train_only
-last_credit_pull_d,Dec-08,train_only
-last_credit_pull_d,Dec-09,train_only
-last_credit_pull_d,Dec-10,train_only
-last_credit_pull_d,Dec-11,train_only
-last_credit_pull_d,Dec-12,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000007,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000030,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000033,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000045,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000067,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000095,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000115,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000124,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000138,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000142,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000198,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000208,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000242,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000253,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000262,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000267,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000280,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000285,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000288,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1000304,train_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10024615,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10074757,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10079154,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10090955,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10091440,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10096063,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10103178,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10119743,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10123630,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10129237,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10135320,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10139327,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10150367,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10167984,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10171202,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10176694,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10177419,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10183655,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=1018948,test_only
-url,https://www.lendingclub.com/browse/loanDetail.action?loan_id=10235063,test_only
-issue_d,Apr-08,train_only
-issue_d,Apr-09,train_only
-issue_d,Apr-10,train_only
-issue_d,Apr-11,train_only
-issue_d,Apr-12,train_only
-issue_d,Apr-13,train_only
-issue_d,Apr-14,train_only
-issue_d,Aug-07,train_only
-issue_d,Aug-08,train_only
-issue_d,Aug-09,train_only
-issue_d,Aug-10,train_only
-issue_d,Aug-11,train_only
-issue_d,Aug-12,train_only
-issue_d,Aug-13,train_only
-issue_d,Aug-14,train_only
-issue_d,Dec-07,train_only
-issue_d,Dec-08,train_only
-issue_d,Dec-09,train_only
-issue_d,Dec-10,train_only
-issue_d,Dec-11,train_only
-issue_d,Apr-15,test_only
-issue_d,Aug-15,test_only
-issue_d,Dec-15,test_only
-issue_d,Feb-15,test_only
-issue_d,Jan-15,test_only
-issue_d,Jul-15,test_only
-issue_d,Jun-15,test_only
-issue_d,Mar-15,test_only
-issue_d,May-15,test_only
-issue_d,Nov-15,test_only
-issue_d,Oct-15,test_only
-issue_d,Sep-15,test_only
-zip_code,093xx,train_only
-zip_code,353xx,train_only
-zip_code,375xx,train_only
-zip_code,429xx,train_only
-zip_code,511xx,train_only
-zip_code,513xx,train_only
-zip_code,514xx,train_only
-zip_code,516xx,train_only
-zip_code,523xx,train_only
-zip_code,524xx,train_only
-zip_code,528xx,train_only
-zip_code,569xx,train_only
-zip_code,621xx,train_only
-zip_code,643xx,train_only
-zip_code,663xx,train_only
-zip_code,682xx,train_only
-zip_code,888xx,train_only
-zip_code,889xx,train_only
-zip_code,901xx,train_only
-zip_code,909xx,train_only
-zip_code,039xx,test_only
-zip_code,042xx,test_only
-zip_code,045xx,test_only
-zip_code,046xx,test_only
-zip_code,047xx,test_only
-zip_code,048xx,test_only
-zip_code,097xx,test_only
-zip_code,205xx,test_only
-zip_code,269xx,test_only
-zip_code,343xx,test_only
-zip_code,348xx,test_only
-zip_code,399xx,test_only
-zip_code,501xx,test_only
-zip_code,504xx,test_only
-zip_code,506xx,test_only
-zip_code,507xx,test_only
-zip_code,509xx,test_only
-zip_code,520xx,test_only
-zip_code,555xx,test_only
-zip_code,568xx,test_only
+last_credit_pull_d,Apr-2009,train_only
+last_credit_pull_d,Apr-2010,train_only
+last_credit_pull_d,Apr-2011,train_only
+last_credit_pull_d,Apr-2012,train_only
+last_credit_pull_d,Apr-2013,train_only
+last_credit_pull_d,Apr-2014,train_only
+last_credit_pull_d,Aug-2007,train_only
+last_credit_pull_d,Aug-2008,train_only
+last_credit_pull_d,Aug-2009,train_only
+last_credit_pull_d,Aug-2010,train_only
+last_credit_pull_d,Aug-2011,train_only
+last_credit_pull_d,Aug-2012,train_only
+last_credit_pull_d,Aug-2013,train_only
+last_credit_pull_d,Aug-2014,train_only
+last_credit_pull_d,Aug-2016,train_only
+last_credit_pull_d,Dec-2007,train_only
+last_credit_pull_d,Dec-2008,train_only
+last_credit_pull_d,Dec-2009,train_only
+last_credit_pull_d,Dec-2010,train_only
+last_credit_pull_d,Dec-2011,train_only
+last_pymnt_d,Apr-2008,train_only
+last_pymnt_d,Apr-2009,train_only
+last_pymnt_d,Apr-2010,train_only
+last_pymnt_d,Apr-2011,train_only
+last_pymnt_d,Apr-2012,train_only
+last_pymnt_d,Apr-2013,train_only
+last_pymnt_d,Apr-2014,train_only
+last_pymnt_d,Aug-2008,train_only
+last_pymnt_d,Aug-2009,train_only
+last_pymnt_d,Aug-2010,train_only
+last_pymnt_d,Aug-2011,train_only
+last_pymnt_d,Aug-2012,train_only
+last_pymnt_d,Aug-2013,train_only
+last_pymnt_d,Aug-2014,train_only
+last_pymnt_d,Aug-2016,train_only
+last_pymnt_d,Dec-2007,train_only
+last_pymnt_d,Dec-2008,train_only
+last_pymnt_d,Dec-2009,train_only
+last_pymnt_d,Dec-2010,train_only
+last_pymnt_d,Dec-2011,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000007,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000030,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000033,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000045,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000067,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000095,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000115,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000124,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000138,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000142,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000198,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000208,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000242,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000253,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000262,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000267,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000280,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000285,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000288,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1000304,train_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10024615,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10074757,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10079154,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10090955,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10091440,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10096063,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10103178,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10119743,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10123630,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10129237,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10135320,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10139327,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10150367,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10167984,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10171202,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10176694,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10177419,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10183655,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=1018948,test_only
+url,https://lendingclub.com/browse/loanDetail.action?loan_id=10235063,test_only
+int_rate,10.00%,train_only
+int_rate,10.01%,train_only
+int_rate,10.08%,train_only
+int_rate,10.14%,train_only
+int_rate,10.15%,train_only
+int_rate,10.16%,train_only
+int_rate,10.20%,train_only
+int_rate,10.25%,train_only
+int_rate,10.28%,train_only
+int_rate,10.33%,train_only
+int_rate,10.36%,train_only
+int_rate,10.37%,train_only
+int_rate,10.38%,train_only
+int_rate,10.39%,train_only
+int_rate,10.46%,train_only
+int_rate,10.51%,train_only
+int_rate,10.59%,train_only
+int_rate,10.62%,train_only
+int_rate,10.65%,train_only
+int_rate,10.71%,train_only
+int_rate,11.53%,test_only
+int_rate,12.05%,test_only
+int_rate,12.59%,test_only
+int_rate,12.88%,test_only
+int_rate,13.18%,test_only
+int_rate,13.33%,test_only
+int_rate,13.44%,test_only
+int_rate,14.48%,test_only
+int_rate,14.85%,test_only
+int_rate,15.41%,test_only
+int_rate,15.77%,test_only
+int_rate,16.55%,test_only
+int_rate,18.20%,test_only
+int_rate,19.19%,test_only
+int_rate,19.48%,test_only
+int_rate,19.89%,test_only
+int_rate,24.24%,test_only
+int_rate,25.09%,test_only
+int_rate,25.78%,test_only
+int_rate,26.77%,test_only
