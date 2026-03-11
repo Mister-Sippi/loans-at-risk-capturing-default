@@ -904,6 +904,62 @@ def convert_month_year_columns_to_datetime(
         raise
 
 
+def convert_percent_string_columns_to_numeric(
+    df_to_transform: pd.DataFrame,
+    *,
+    percent_columns: list[str],
+    log: Callable[[str], None] | Path | str | None = None,
+) -> pd.DataFrame:
+    """
+    Convert percent-encoded numeric columns (e.g. "13.56%") to float.
+    """
+
+    try:
+
+        df_transformed: pd.DataFrame = df_to_transform.copy()
+
+        for column_name in percent_columns:
+
+            if column_name not in df_transformed.columns:
+                _emit_log(
+                    log,
+                    f"[convert_percent_string_columns_to_numeric] column not found (skipped): {column_name}",
+                )
+                continue
+
+            df_transformed[column_name] = (
+                df_transformed[column_name]
+                .astype("string")
+                .str.replace("%", "", regex=False)
+                .str.strip()
+                .astype(float)
+            )
+
+            _emit_log(
+                log,
+                f"Converted percent string column to numeric: {column_name} | "
+                f"dtype={df_transformed[column_name].dtype}"
+            )
+
+        _emit_log(
+            log,
+            "Percent string numeric conversion completed successfully | "
+            f"columns_converted={percent_columns}",
+        )
+
+        return df_transformed
+
+    except Exception as exc:
+        try:
+            _emit_log(
+                log,
+                f"Error in convert_percent_string_columns_to_numeric: {exc}",
+            )
+        except Exception:
+            pass
+        raise
+
+
 def transform_emp_length(
     df: pd.DataFrame,
     column_name: str = "emp_length",
@@ -2344,4 +2400,125 @@ def build_numerical_alignment_report(
             _emit_log(log, f"[numerical_alignment] failed | error={exc}")
         except Exception:
             pass
+        raise
+
+
+def build_residual_text_column_audit(
+    df_to_audit: pd.DataFrame,
+    *,
+    dataset_split_name: str,
+    log: Callable[[dict[str, Any]], None],
+    sample_size: int = 5,
+) -> pd.DataFrame:
+    """
+    Identify columns that remain text-like (object/string/category) after transformation.
+
+    Used after transformation layers (clean, feature_base) to verify whether
+    residual text columns are expected categorical features or unhandled
+    numeric-like strings.
+    """
+
+    try:
+
+        text_like_columns: list[str] = []
+
+        for column_name in df_to_audit.columns:
+
+            column_series: pd.Series = df_to_audit[column_name]
+
+            if (
+                pd.api.types.is_object_dtype(column_series)
+                or pd.api.types.is_string_dtype(column_series)
+                or pd.api.types.is_categorical_dtype(column_series)
+            ):
+                text_like_columns.append(column_name)
+
+        audit_records: list[dict[str, Any]] = []
+
+        for column_name in text_like_columns:
+
+            column_series: pd.Series = df_to_audit[column_name]
+
+            non_missing_values: pd.Series = column_series.dropna().astype("string")
+
+            sample_values_list: list[str] = (
+                non_missing_values.head(sample_size).tolist()
+            )
+
+            formatted_sample_values: str = (
+                " | ".join([str(value) for value in sample_values_list])
+                if sample_values_list
+                else "no non-missing values"
+            )
+
+            missing_count: int = int(column_series.isna().sum())
+            missing_rate_percent: float = float(column_series.isna().mean() * 100)
+
+            unique_count_including_missing: int = int(
+                column_series.nunique(dropna=False)
+            )
+
+            suspicious_numeric_like_text: bool = False
+
+            for sample_value in sample_values_list:
+
+                value_as_string: str = str(sample_value)
+
+                if (
+                    "%" in value_as_string
+                    or "$" in value_as_string
+                    or "," in value_as_string
+                ):
+                    suspicious_numeric_like_text = True
+
+                numeric_candidate: str = (
+                    value_as_string.replace(".", "", 1)
+                    .replace("-", "", 1)
+                    .replace("%", "")
+                )
+
+                if numeric_candidate.isdigit():
+                    suspicious_numeric_like_text = True
+
+            audit_records.append(
+                {
+                    "dataset_split": dataset_split_name,
+                    "column_name": column_name,
+                    "dtype": str(column_series.dtype),
+                    "missing_count": missing_count,
+                    "missing_rate_percent": round(missing_rate_percent, 2),
+                    "unique_count_including_missing": unique_count_including_missing,
+                    "sample_values": formatted_sample_values,
+                    "suspicious_numeric_like_text": suspicious_numeric_like_text,
+                }
+            )
+
+        df_audit: pd.DataFrame = pd.DataFrame(audit_records)
+
+        if not df_audit.empty:
+
+            df_audit = df_audit.sort_values(
+                by=["suspicious_numeric_like_text", "column_name"],
+                ascending=[False, True],
+            ).reset_index(drop=True)
+
+        log(
+            {
+                "stage": "residual_text_column_audit_complete",
+                "dataset_split": dataset_split_name,
+                "text_column_count": len(text_like_columns),
+            }
+        )
+
+        return df_audit
+
+    except Exception as exc:
+
+        log(
+            {
+                "stage": "residual_text_column_audit_failed",
+                "dataset_split": dataset_split_name,
+                "error": str(exc),
+            }
+        )
         raise

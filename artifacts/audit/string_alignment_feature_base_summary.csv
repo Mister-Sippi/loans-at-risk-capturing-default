@@ -1,2 +1,2 @@
 string_like_cols_train,string_like_cols_test,string_like_cols_union,string_like_cols_with_differences,top_k_returned
-4,4,4,2,2
+3,3,3,1,1
