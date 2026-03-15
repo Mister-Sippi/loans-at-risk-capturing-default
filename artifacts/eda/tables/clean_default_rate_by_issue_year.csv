@@ -1,0 +1,10 @@
+issue_year,default_rate_percent,loan_count,dataset_split
+2007,17.93,251,train
+2008,15.81,1562,train
+2009,12.6,4716,train
+2010,12.89,11536,train
+2011,15.49,21175,train
+2012,16.54,50385,train
+2013,18.11,95334,train
+2014,22.4,95237,train
+2015,18.61,60012,test

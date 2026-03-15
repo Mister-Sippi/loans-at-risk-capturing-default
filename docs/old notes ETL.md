@@ -474,3 +474,55 @@ Outputs are persisted as:
 
 - **`clean`** — governed dataset with benchmark variables retained
 - **`feature_base`** — modeling dataset containing only training-eligible predictors and the target
+
+
+## Objective
+This notebook examines the feature space produced during the ETL stage in order to understand how borrower characteristics relate to loan default risk. The purpose is not simply to inspect variable distributions, but to evaluate whether the information available at the time a borrower submits a loan application contains meaningful signals for predicting repayment outcomes.
+
+The analysis operates within the **application-submission prediction boundary** established earlier in the pipeline. Only information observable when the borrower applied for the loan is used for modeling. During ETL the dataset was organized into two layers. The **clean dataset** preserves the normalized loan records and retains additional variables that describe the full loan lifecycle. The **feature base dataset** contains the subset of variables that respect the application-time information boundary and therefore form the modeling feature space.
+
+This separation allows diagnostic validation to use the full loan record while ensuring that predictive modeling relies only on information that would have been available at the moment of application. The analysis in this notebook therefore examines the structure of the dataset and evaluates whether the variables within the modeling boundary plausibly capture mechanisms relevant to credit risk.
+
+---
+
+## Analytical Structure
+The analysis is organized in two stages corresponding to the dataset layers produced during the ETL notebook.
+
+1. **Diagnostic validation using the clean dataset**  
+2. **Decision-focused analysis using the feature base dataset**
+
+The first stage verifies that the dataset behaves coherently from a lending perspective. Loan outcomes must follow a plausible repayment structure, the temporal ordering of the dataset must reflect the development of lending cohorts over time, and the modeling population must be clearly defined. Before any modeling work begins, the dataset itself must demonstrate that it represents a valid observation of the lending process.
+
+The second stage examines the variables that remain within the modeling boundary and evaluates whether they contain meaningful signals for predicting loan default. The focus here is analytical rather than technical: the objective is to understand how borrower characteristics, loan terms, and credit behavior relate to repayment outcomes and whether those relationships appear stable enough to support modeling.
+
+Taken together, these two stages move from **dataset integrity** to **risk signal investigation**, establishing both the validity of the data and the analytical basis for the modeling phase that follows.
+
+---
+
+## Notebook Structure
+
+### Part 1 — Diagnostic Validation (`clean`)
+The first stage evaluates the structural integrity of the dataset using the **clean training dataset** and **clean testing dataset**. The objective is to confirm that the outcome variable, temporal structure, and dataset composition behave as expected before any modeling analysis is performed.
+
+Loan datasets contain a mixture of completed and ongoing repayment states. For modeling purposes the analysis must focus on outcomes that represent the completed repayment process. This stage therefore verifies that the loan status variable provides a coherent representation of repayment outcomes and that the modeling cohort can be defined in a way that reflects final borrower behavior.
+
+In addition to validating outcome definitions, this stage examines the temporal structure of the dataset. Lending platforms evolve over time, loan volumes change across years, and reporting practices may shift. Confirming the temporal structure ensures that the modeling phase trains on earlier lending cohorts and evaluates performance on a later period.
+
+This stage defines the modeling population by excluding loans whose repayment outcome has not yet been determined. Once the modeling cohort is established, the analysis proceeds to examine the submission-time features available at loan application.
+
+### Part 2 — Decision EDA (`feature_base`)
+The second stage analyzes the feature space used for modeling. The analysis focuses exclusively on variables contained in the **feature base training dataset** and **feature base testing dataset**, which include only information available at application submission.
+
+To keep the analysis interpretable, variables are examined in groups that reflect the types of information available when a borrower applies for a loan:
+
+
+1. **Target Definition & Cohort**
+2. **Application Profile**
+3. **Loan Structure**
+4. **Debt Burden**
+5. **Credit History**
+6. **Recent Credit Behavior**
+7. **Reporting Shifts / Data Quality**
+
+These domains organize the variables according to the type of information they represent. Application profile variables describe the borrower’s financial situation at the moment of application. Loan structure variables describe the contractual terms of the loan itself. Debt burden measures the borrower’s leverage relative to income and available credit. Credit history and recent credit behavior summarize how the borrower has managed credit obligations in the past. Reporting shifts and data quality are examined separately to identify structural artifacts that could affect modeling.
+

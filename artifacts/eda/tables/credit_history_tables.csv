@@ -1,0 +1,47 @@
+feature_bin,default_rate_percent,loan_count,feature_name,dataset_split
+"(-0.001, 6.0]",17.36,46608,open_acc,train
+"(6.0, 7.0]",18.08,23272,open_acc,train
+"(7.0, 8.0]",18.08,25806,open_acc,train
+"(8.0, 9.0]",18.59,27012,open_acc,train
+"(9.0, 10.0]",19.06,25661,open_acc,train
+"(10.0, 11.0]",19.32,23587,open_acc,train
+"(11.0, 13.0]",19.11,38044,open_acc,train
+"(13.0, 14.0]",19.42,14571,open_acc,train
+"(14.0, 17.0]",19.29,29010,open_acc,train
+"(17.0, 76.0]",20.49,26625,open_acc,train
+"(-0.001, 6.0]",18.19,8450,open_acc,test
+"(6.0, 7.0]",17.7,4379,open_acc,test
+"(7.0, 8.0]",18.47,4954,open_acc,test
+"(8.0, 9.0]",18.14,5260,open_acc,test
+"(9.0, 10.0]",18.69,5168,open_acc,test
+"(10.0, 11.0]",19.03,4814,open_acc,test
+"(11.0, 13.0]",19.22,8059,open_acc,test
+"(13.0, 14.0]",19.28,3262,open_acc,test
+"(14.0, 17.0]",18.99,7062,open_acc,test
+"(17.0, 76.0]",18.43,8604,open_acc,test
+0.0,18.58,246789,pub_rec,train
+1.0,19.91,29597,pub_rec,train
+10.0,0.0,7,pub_rec,train
+11.0,0.0,2,pub_rec,train
+13.0,0.0,1,pub_rec,train
+2.0,22.32,2688,pub_rec,train
+3.0,20.46,699,pub_rec,train
+4.0,22.87,223,pub_rec,train
+5.0,24.53,106,pub_rec,train
+54.0,0.0,1,pub_rec,train
+6.0,22.92,48,pub_rec,train
+7.0,26.32,19,pub_rec,train
+8.0,20.0,10,pub_rec,train
+9.0,50.0,6,pub_rec,train
+0.0,18.67,48535,pub_rec,test
+1.0,18.21,9560,pub_rec,test
+12.0,50.0,2,pub_rec,test
+15.0,0.0,1,pub_rec,test
+2.0,17.36,1325,pub_rec,test
+3.0,21.74,368,pub_rec,test
+4.0,27.64,123,pub_rec,test
+5.0,23.64,55,pub_rec,test
+6.0,28.57,21,pub_rec,test
+7.0,0.0,8,pub_rec,test
+8.0,0.0,12,pub_rec,test
+9.0,50.0,2,pub_rec,test

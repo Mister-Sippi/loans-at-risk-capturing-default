@@ -1,0 +1,10 @@
+dataset_split,issue_year,charged_off,current,default,does_not_meet_the_credit_policy._status:charged_off,does_not_meet_the_credit_policy._status:fully_paid,fully_paid,in_grace_period,late_(16-30_days),late_(31-120_days)
+train,2007,45,0,0,113,239,206,0,0,0
+train,2008,247,0,0,249,582,1315,0,0,0
+train,2009,594,0,0,129,436,4122,0,0,0
+train,2010,1487,0,0,270,731,10049,0,0,0
+train,2011,3280,513,1,0,0,17894,16,5,12
+train,2012,8317,2768,17,0,0,42051,98,19,97
+train,2013,17238,37184,27,0,0,78069,890,268,1080
+train,2014,21266,133113,66,0,0,73905,2522,817,3940
+test,2015,11075,346702,93,0,0,48844,5122,1711,7548

@@ -1,0 +1,28 @@
+feature_bin,default_rate_percent,loan_count,feature_name,dataset_split
+"(2999.999, 33000.0]",24.07,28125,annual_inc,train
+"(33000.0, 41000.0]",22.88,29214,annual_inc,train
+"(41000.0, 48000.0]",21.42,27289,annual_inc,train
+"(48000.0, 55000.0]",20.3,31782,annual_inc,train
+"(55000.0, 62000.0]",20.15,25162,annual_inc,train
+"(62000.0, 70000.0]",18.45,27944,annual_inc,train
+"(70000.0, 80000.0]",17.1,27992,annual_inc,train
+"(80000.0, 95000.0]",15.33,28180,annual_inc,train
+"(95000.0, 120000.0]",14.46,29003,annual_inc,train
+"(120000.0, 7141778.0]",12.97,25505,annual_inc,train
+"(2999.999, 33000.0]",26.68,5124,annual_inc,test
+"(33000.0, 41000.0]",23.2,5755,annual_inc,test
+"(41000.0, 48000.0]",20.37,5400,annual_inc,test
+"(48000.0, 55000.0]",19.44,6496,annual_inc,test
+"(55000.0, 62000.0]",19.21,5246,annual_inc,test
+"(62000.0, 70000.0]",18.63,6051,annual_inc,test
+"(70000.0, 80000.0]",17.59,6056,annual_inc,test
+"(80000.0, 95000.0]",15.71,6313,annual_inc,test
+"(95000.0, 120000.0]",14.74,6850,annual_inc,test
+"(120000.0, 7141778.0]",13.38,6718,annual_inc,test
+mortgage,16.82,139019,home_ownership,train
+other,18.38,185,home_ownership,train
+own,19.81,23727,home_ownership,train
+rent,20.86,117265,home_ownership,train
+mortgage,14.9,29678,home_ownership,test
+own,18.3,6619,home_ownership,test
+rent,23.34,23715,home_ownership,test

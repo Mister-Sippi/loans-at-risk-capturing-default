@@ -1,0 +1,13 @@
+feature_bin,dataset_split,missing_percent,feature_name,category,loan_count,default_rate_percent
+tot_coll_amt,train,23.4,,,,
+tot_cur_bal,train,23.4,,,,
+total_rev_hi_lim,train,23.4,,,,
+tot_coll_amt,test,0.0,,,,
+tot_cur_bal,test,0.0,,,,
+total_rev_hi_lim,test,0.0,,,,
+,train,,tot_cur_bal,missing,65561.0,15.54
+,train,,tot_cur_bal,not_missing,214635.0,19.75
+,test,,tot_cur_bal,not_missing,60012.0,18.61
+,train,,total_rev_hi_lim,missing,65561.0,15.54
+,train,,total_rev_hi_lim,not_missing,214635.0,19.75
+,test,,total_rev_hi_lim,not_missing,60012.0,18.61

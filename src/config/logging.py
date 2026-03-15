@@ -121,3 +121,26 @@ def log_dataframe_checkpoint(
             f"Error={type(exc).__name__}: {exc}"
         )
         raise
+
+
+def emit_log(
+    log: Callable[[str], None] | Path | str | None,
+    message: str,
+) -> None:
+    """Emit a log message to a callable logger or append to a log file path."""
+    if log is None:
+        return
+
+    if callable(log):
+        log(message)
+        return
+
+    if isinstance(log, (Path, str)):
+        log_path = Path(log)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with log_path.open("a", encoding="utf-8") as log_file:
+            log_file.write(f"{message}\n")
+        return
+
+    raise TypeError("log must be a callable, Path, str, or None")

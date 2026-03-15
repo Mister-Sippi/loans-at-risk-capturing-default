@@ -1,0 +1,53 @@
+feature_bin,default_rate_percent,loan_count,feature_name,dataset_split
+"(499.999, 4800.0]",15.96,28706,loan_amnt,train
+"(4800.0, 6400.0]",15.87,27542,loan_amnt,train
+"(6400.0, 8325.0]",16.07,27927,loan_amnt,train
+"(8325.0, 10000.0]",17.42,37412,loan_amnt,train
+"(10000.0, 12000.0]",18.13,29244,loan_amnt,train
+"(12000.0, 14400.0]",19.07,17841,loan_amnt,train
+"(14400.0, 16750.0]",19.86,27555,loan_amnt,train
+"(16750.0, 20000.0]",20.62,32314,loan_amnt,train
+"(20000.0, 25000.0]",21.33,26324,loan_amnt,train
+"(25000.0, 35000.0]",24.35,25331,loan_amnt,train
+"(499.999, 4800.0]",13.82,5811,loan_amnt,test
+"(4800.0, 6400.0]",15.97,5580,loan_amnt,test
+"(6400.0, 8325.0]",16.59,5370,loan_amnt,test
+"(8325.0, 10000.0]",16.82,6851,loan_amnt,test
+"(10000.0, 12000.0]",20.64,5921,loan_amnt,test
+"(12000.0, 14400.0]",21.57,3825,loan_amnt,test
+"(14400.0, 16750.0]",19.02,6074,loan_amnt,test
+"(16750.0, 20000.0]",20.94,6849,loan_amnt,test
+"(20000.0, 25000.0]",20.91,6203,loan_amnt,test
+"(25000.0, 35000.0]",19.9,7528,loan_amnt,test
+36,15.25,219720,term_months,train
+60,31.54,60476,term_months,train
+36,15.4,42340,term_months,test
+60,26.31,17672,term_months,test
+car,12.42,3914,purpose,train
+credit_card,16.07,58312,purpose,train
+debt_consolidation,19.76,163642,purpose,train
+educational,17.23,325,purpose,train
+home_improvement,16.27,16234,purpose,train
+house,18.7,1658,purpose,train
+major_purchase,14.39,6697,purpose,train
+medical,20.63,3001,purpose,train
+moving,21.96,2063,purpose,train
+other,21.3,15185,purpose,train
+renewable_energy,20.14,278,purpose,train
+small_business,29.03,5115,purpose,train
+vacation,18.53,1641,purpose,train
+wedding,12.72,2131,purpose,train
+car,14.34,579,purpose,test
+credit_card,16.0,11167,purpose,test
+debt_consolidation,19.31,37355,purpose,test
+educational,0.0,1,purpose,test
+home_improvement,14.94,4003,purpose,test
+house,18.79,346,purpose,test
+major_purchase,19.73,1186,purpose,test
+medical,23.8,668,purpose,test
+moving,25.11,474,purpose,test
+other,20.16,3204,purpose,test
+renewable_energy,21.74,46,purpose,test
+small_business,31.52,571,purpose,test
+vacation,18.0,411,purpose,test
+wedding,0.0,1,purpose,test

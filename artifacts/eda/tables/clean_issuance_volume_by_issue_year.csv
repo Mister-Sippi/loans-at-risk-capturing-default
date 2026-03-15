@@ -1,0 +1,10 @@
+issue_year,loan_count,dataset_split
+2007,603,train
+2008,2393,train
+2009,5281,train
+2010,12537,train
+2011,21721,train
+2012,53367,train
+2013,134756,train
+2014,235629,train
+2015,421095,test
