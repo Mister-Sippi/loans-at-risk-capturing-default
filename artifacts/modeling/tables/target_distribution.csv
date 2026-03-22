@@ -1,0 +1,3 @@
+dataset_split,positive_count,negative_count,default_rate_percent
+train,53346,229599,18.85
+test,11168,48844,18.61
