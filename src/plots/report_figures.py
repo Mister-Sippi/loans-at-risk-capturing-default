@@ -6,13 +6,15 @@ from typing import Callable, Sequence
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
+from sklearn.calibration import calibration_curve
+from sklearn.metrics import ConfusionMatrixDisplay, RocCurveDisplay
 
 import config.logging as log_config
 
 
-#==============================================================================
-#EDA artifact figures
-#==============================================================================
+# ==============================================================================
+# EDA artifact figures
+# ==============================================================================
 
 
 def plot_portfolio_evolution_figure(
@@ -288,3 +290,376 @@ def plot_log_transformation_comparison_figure(
             ),
         )
         raise
+    
+
+# ==============================================================================
+# Modeling artifact figures
+# ==============================================================================
+
+
+def plot_model_roc_comparison_figure(
+    model_curves: list[dict[str, object]],
+    output_path: Path,
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Path:
+    """
+    Plot ROC curves for multiple models on a single figure.
+
+    Parameters
+    ----------
+    model_curves : list[dict[str, object]]
+        List of dictionaries with keys:
+        - "model_name": str
+        - "y_true": pd.Series | np.ndarray
+        - "y_score": pd.Series | np.ndarray
+    output_path : Path
+        Output file path for the saved figure.
+    log : Callable[[str], None] | Path | str | None, default=None
+        Logging target supported by log_config.emit_log.
+
+    Returns
+    -------
+    Path
+        Saved figure path.
+    """
+    try:
+        if not model_curves:
+            raise ValueError("model_curves must contain at least one model specification.")
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        figure, axis = plt.subplots(figsize=(8, 6))
+
+        for model_curve in model_curves:
+            if not isinstance(model_curve, dict):
+                raise ValueError("Each model_curve must be a dictionary.")
+
+            required_keys = {"model_name", "y_true", "y_score"}
+            missing_keys = required_keys - set(model_curve.keys())
+            if missing_keys:
+                raise KeyError(
+                    f"Each model_curve must contain keys {sorted(required_keys)}. "
+                    f"Missing keys: {sorted(missing_keys)}"
+                )
+
+            model_name = str(model_curve["model_name"])
+            y_true = model_curve["y_true"]
+            y_score = model_curve["y_score"]
+
+            RocCurveDisplay.from_predictions(
+                y_true=y_true,
+                y_score=y_score,
+                name=model_name,
+                ax=axis,
+            )
+
+        axis.plot([0, 1], [0, 1], linestyle="--", linewidth=1)
+        axis.set_title("ROC Curve Comparison")
+        axis.set_xlabel("False Positive Rate")
+        axis.set_ylabel("True Positive Rate")
+        axis.grid(alpha=0.25)
+
+        figure.tight_layout()
+        figure.savefig(output_path, dpi=300, bbox_inches="tight")
+        plt.close(figure)
+
+        log_config.emit_log(
+            log=log,
+            message=(
+                "[plot_model_roc_comparison_figure] "
+                f"Saved figure for {len(model_curves)} models to {output_path}"
+            ),
+        )
+
+        return output_path
+
+    except Exception as exc:
+        log_config.emit_log(
+            log=log,
+            message=f"[plot_model_roc_comparison_figure][error] {type(exc).__name__}: {exc}",
+        )
+        raise
+
+
+def plot_model_calibration_figure(
+    y_true: pd.Series | np.ndarray,
+    y_score: pd.Series | np.ndarray,
+    model_name: str,
+    output_path: Path,
+    n_bins: int = 10,
+    strategy: str = "quantile",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Path:
+    """
+    Plot calibration curve for a single model.
+
+    Parameters
+    ----------
+    y_true : pd.Series | np.ndarray
+        True binary labels.
+    y_score : pd.Series | np.ndarray
+        Predicted probabilities for the positive class.
+    model_name : str
+        Model label for the plot.
+    output_path : Path
+        Output file path for the saved figure.
+    n_bins : int, default=10
+        Number of probability bins.
+    strategy : str, default="quantile"
+        Binning strategy passed to sklearn.calibration.calibration_curve.
+    log : Callable[[str], None] | Path | str | None, default=None
+        Logging target supported by log_config.emit_log.
+
+    Returns
+    -------
+    Path
+        Saved figure path.
+    """
+    try:
+        if not model_name or not model_name.strip():
+            raise ValueError("model_name must be a non-empty string.")
+
+        if n_bins <= 1:
+            raise ValueError("n_bins must be greater than 1.")
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        fraction_of_positives, mean_predicted_value = calibration_curve(
+            y_true=y_true,
+            y_prob=y_score,
+            n_bins=n_bins,
+            strategy=strategy,
+        )
+
+        figure, axis = plt.subplots(figsize=(8, 6))
+        axis.plot([0, 1], [0, 1], linestyle="--", linewidth=1, label="Perfect calibration")
+        axis.plot(
+            mean_predicted_value,
+            fraction_of_positives,
+            marker="o",
+            linewidth=1.5,
+            label=model_name,
+        )
+
+        axis.set_title(f"Calibration Curve — {model_name}")
+        axis.set_xlabel("Mean Predicted Probability")
+        axis.set_ylabel("Observed Default Rate")
+        axis.grid(alpha=0.25)
+        axis.legend()
+
+        figure.tight_layout()
+        figure.savefig(output_path, dpi=300, bbox_inches="tight")
+        plt.close(figure)
+
+        log_config.emit_log(
+            log=log,
+            message=(
+                "[plot_model_calibration_figure] "
+                f"Saved calibration figure for model={model_name} to {output_path}"
+            ),
+        )
+
+        return output_path
+
+    except Exception as exc:
+        log_config.emit_log(
+            log=log,
+            message=f"[plot_model_calibration_figure][error] {type(exc).__name__}: {exc}",
+        )
+        raise
+
+
+def plot_confusion_matrix_figure(
+    y_true: pd.Series | np.ndarray,
+    y_pred: pd.Series | np.ndarray,
+    model_name: str,
+    output_path: Path,
+    labels: list[int] | None = None,
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Path:
+    """
+    Plot confusion matrix for a single model.
+
+    Parameters
+    ----------
+    y_true : pd.Series | np.ndarray
+        True binary labels.
+    y_pred : pd.Series | np.ndarray
+        Predicted binary labels.
+    model_name : str
+        Model label for the plot.
+    output_path : Path
+        Output file path for the saved figure.
+    labels : list[int] | None, default=None
+        Label order for the confusion matrix.
+    log : Callable[[str], None] | Path | str | None, default=None
+        Logging target supported by log_config.emit_log.
+
+    Returns
+    -------
+    Path
+        Saved figure path.
+    """
+    try:
+        if not model_name or not model_name.strip():
+            raise ValueError("model_name must be a non-empty string.")
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        figure, axis = plt.subplots(figsize=(6, 6))
+
+        display = ConfusionMatrixDisplay.from_predictions(
+            y_true=y_true,
+            y_pred=y_pred,
+            labels=labels,
+            ax=axis,
+            colorbar=False,
+        )
+
+        for text in display.text_.ravel():
+            text.set_fontsize(10)
+
+        axis.set_title(f"Confusion Matrix — {model_name}")
+        axis.set_xlabel("Predicted Label")
+        axis.set_ylabel("True Label")
+
+        figure.tight_layout()
+        figure.savefig(output_path, dpi=300, bbox_inches="tight")
+        plt.close(figure)
+
+        log_config.emit_log(
+            log=log,
+            message=(
+                "[plot_confusion_matrix_figure] "
+                f"Saved confusion matrix figure for model={model_name} to {output_path}"
+            ),
+        )
+
+        return output_path
+
+    except Exception as exc:
+        log_config.emit_log(
+            log=log,
+            message=f"[plot_confusion_matrix_figure][error] {type(exc).__name__}: {exc}",
+        )
+        raise
+
+
+def plot_monetary_outcome_comparison_figure(
+    outcome_summary_df: pd.DataFrame,
+    output_path: Path,
+    selected_models: list[str] | None = None,
+    value_column: str = "total_loan_amnt",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Path:
+    """
+    Plot grouped bar chart comparing monetary outcomes across models.
+
+    Parameters
+    ----------
+    outcome_summary_df : pd.DataFrame
+        Outcome summary table containing at least:
+        - model_name
+        - outcome_type
+        - total_loan_amnt
+    output_path : Path
+        Output file path for the saved figure.
+    selected_models : list[str] | None, default=None
+        Optional subset of models to include.
+    value_column : str, default="total_loan_amnt"
+        Monetary column to plot.
+    log : Callable[[str], None] | Path | str | None, default=None
+        Logging target supported by log_config.emit_log.
+
+    Returns
+    -------
+    Path
+        Saved figure path.
+    """
+    try:
+        if outcome_summary_df is None:
+            raise ValueError("outcome_summary_df must not be None.")
+
+        if not isinstance(outcome_summary_df, pd.DataFrame):
+            raise ValueError("outcome_summary_df must be a pandas DataFrame.")
+
+        if outcome_summary_df.empty:
+            raise ValueError("outcome_summary_df must not be empty.")
+
+        required_columns = {"model_name", "outcome_type", value_column}
+        missing_columns = required_columns - set(outcome_summary_df.columns)
+        if missing_columns:
+            raise KeyError(
+                f"outcome_summary_df missing required columns: {sorted(missing_columns)}"
+            )
+
+        plot_df = outcome_summary_df.copy()
+
+        if selected_models is not None:
+            if not isinstance(selected_models, list) or not selected_models:
+                raise ValueError("selected_models must be a non-empty list or None.")
+
+            plot_df = plot_df.loc[plot_df["model_name"].isin(selected_models)].copy()
+
+            if plot_df.empty:
+                raise ValueError("No rows remain after filtering outcome_summary_df by selected_models.")
+
+        output_path = Path(output_path)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        outcome_order = [
+            "false_negative",
+            "false_positive",
+            "true_negative",
+            "true_positive",
+        ]
+        plot_df["outcome_type"] = pd.Categorical(
+            plot_df["outcome_type"],
+            categories=outcome_order,
+            ordered=True,
+        )
+
+        pivot_df = (
+            plot_df.pivot(index="outcome_type", columns="model_name", values=value_column)
+            .reindex(outcome_order)
+        )
+
+        figure, axis = plt.subplots(figsize=(10, 6))
+
+        pivot_df.plot(
+            kind="bar",
+            ax=axis,
+            edgecolor="black",
+            linewidth=0.8,
+        )
+
+        axis.set_title("Loan Amount by Outcome Type and Model")
+        axis.set_xlabel("Outcome Type")
+        axis.set_ylabel("Total Loan Amount")
+        axis.grid(axis="y", alpha=0.25)
+        axis.legend(title="Model")
+
+        figure.tight_layout()
+        figure.savefig(output_path, dpi=300, bbox_inches="tight")
+        plt.close(figure)
+
+        log_config.emit_log(
+            log=log,
+            message=(
+                "[plot_monetary_outcome_comparison_figure] "
+                f"Saved figure to {output_path}"
+            ),
+        )
+
+        return output_path
+
+    except Exception as exc:
+        log_config.emit_log(
+            log=log,
+            message=f"[plot_monetary_outcome_comparison_figure][error] {type(exc).__name__}: {exc}",
+        )
+        raise
+

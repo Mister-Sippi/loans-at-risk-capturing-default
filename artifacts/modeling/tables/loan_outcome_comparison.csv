@@ -15,6 +15,10 @@ catboost_shared,test,false_negative,9783,147006450,15026.72493100276,13200.0
 catboost_shared,test,false_positive,1484,28164600,18978.840970350404,17612.5
 catboost_shared,test,true_negative,47360,677821625,14312.112014358108,12000.0
 catboost_shared,test,true_positive,1385,25569675,18461.859205776174,17000.0
+catboost_tree_no_log,test,false_negative,9785,147053350,15028.446601941747,13200.0
+catboost_tree_no_log,test,false_positive,1450,27707525,19108.637931034482,18000.0
+catboost_tree_no_log,test,true_negative,47394,678278700,14311.488796050133,12000.0
+catboost_tree_no_log,test,true_positive,1383,25522775,18454.645697758497,17000.0
 catboost_native,test,false_negative,9772,146979700,15040.902578796562,13250.0
 catboost_native,test,false_positive,1545,29412250,19037.055016181228,17875.0
 catboost_native,test,true_negative,47299,676573975,14304.191949089833,12000.0

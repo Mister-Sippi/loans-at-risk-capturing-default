@@ -1,0 +1,13 @@
+model_name,dataset_name,outcome_type,row_count,total_loan_amnt,average_loan_amnt,median_loan_amnt
+catboost_shared,test,false_negative,9783,147006450,15026.72493100276,13200.0
+catboost_shared,test,false_positive,1484,28164600,18978.840970350404,17612.5
+catboost_shared,test,true_negative,47360,677821625,14312.112014358108,12000.0
+catboost_shared,test,true_positive,1385,25569675,18461.859205776174,17000.0
+catboost_shared_tuned,test,false_negative,9606,143811225,14970.979075577763,13075.0
+catboost_shared_tuned,test,false_positive,1698,32327150,19038.36866902238,18000.0
+catboost_shared_tuned,test,true_negative,47146,673659075,14288.785368854198,12000.0
+catboost_shared_tuned,test,true_positive,1562,28764900,18415.428937259923,17112.5
+catboost_shared_tuned_weighted,test,false_negative,9664,144760325,14979.338265728476,13087.5
+catboost_shared_tuned_weighted,test,false_positive,1652,31926200,19325.786924939468,18000.0
+catboost_shared_tuned_weighted,test,true_negative,47192,674060025,14283.353640447533,12000.0
+catboost_shared_tuned_weighted,test,true_positive,1504,27815800,18494.547872340427,17187.5
