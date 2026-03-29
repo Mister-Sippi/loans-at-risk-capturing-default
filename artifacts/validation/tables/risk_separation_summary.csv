@@ -1,0 +1,5 @@
+system_name,dataset_name,auc
+baseline_subgrade,train,0.6782944159750992
+model,train,0.7485215377470962
+baseline_subgrade,test,0.6919443049816046
+model,test,0.7232283807796719
