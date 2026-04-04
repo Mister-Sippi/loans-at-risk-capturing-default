@@ -13,10 +13,15 @@ def build_terminal_cohort(
     *,
     status_column: str,
     terminal_statuses: Sequence[str],
-    log: Callable[[str], None] | None = None,
+    log: Callable[[str], None] | Path | str | None = None,
 ) -> pd.DataFrame:
     """
-    Restrict a dataset to realized repayment outcomes and derive a binary target.
+    Restrict a dataset to realized repayment outcomes.
+
+	Notes
+	-----
+	This function filters the dataset to terminal repayment statuses only.
+	Binary target construction is performed separately by the calling code.
     """
     try:
         missing_columns = [column_name for column_name in [status_column] if column_name not in df.columns]
@@ -50,7 +55,38 @@ def create_target_default(
     target_column: str = "target_default",
     log: Callable[[str], None] | Path | str | None = None,
 ) -> pd.DataFrame:
+    """
+    Create a binary default target from loan status.
 
+    This function maps loan status values to a binary target variable,
+    where observations with statuses in `positive_statuses` are labeled
+    as default (1) and all other observations are labeled as non-default (0).
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input dataset containing loan status information.
+    status_column : str
+        Column containing loan status values.
+    positive_statuses : Sequence[str]
+        Status values that should be treated as default events.
+        For example: ["charged_off", "default"].
+    target_column : str, default="target_default"
+        Name of the output binary target column.
+    log : Callable | Path | str | None
+        Logger compatible with emit_log.
+
+    Returns
+    -------
+    pd.DataFrame
+        Copy of the input DataFrame with the binary target column added.
+
+    Notes
+    -----
+    This function defines the default event used throughout the modeling
+    and validation pipeline. The choice of `positive_statuses` must remain
+    consistent across all stages to ensure comparability of results.
+    """
     try:
         if status_column not in df.columns:
             raise KeyError(

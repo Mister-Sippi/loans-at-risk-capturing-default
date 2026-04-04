@@ -26,7 +26,6 @@ def log_messages(message: str, log_file: Path | str) -> None:
         raise
 
 
-
 def get_logger(log_file: Path | str | None) -> Callable[[str], None]:
     """
     Return a lightweight logger function.
@@ -45,7 +44,6 @@ def get_logger(log_file: Path | str | None) -> Callable[[str], None]:
         log_messages(message, log_path)
 
     return log
-
 
 
 def log_dataframe_checkpoint(

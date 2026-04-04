@@ -4,6 +4,8 @@ from pathlib import Path
 from typing import Callable, Sequence
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.ticker import FuncFormatter, PercentFormatter
 import pandas as pd
 import numpy as np
 from sklearn.calibration import calibration_curve
@@ -663,3 +665,650 @@ def plot_monetary_outcome_comparison_figure(
         )
         raise
 
+
+# ==============================================================================
+# Validation artifact figures
+# ==============================================================================
+
+def plot_report_roc_curve(
+    df_roc_curve_artifact: pd.DataFrame,
+    system_name_column: str = "system_name",
+    dataset_name_column: str = "dataset_name",
+    false_positive_rate_column: str = "false_positive_rate",
+    true_positive_rate_column: str = "true_positive_rate",
+    auc_column: str = "auc",
+    dataset_name: str = "test",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Figure:
+    """
+    Plot ROC curves for the model and baseline on a single dataset split.
+
+    Parameters
+    ----------
+    df_roc_curve_artifact : pd.DataFrame
+        Combined ROC artifact table.
+    system_name_column : str, default="system_name"
+        Column containing system names.
+    dataset_name_column : str, default="dataset_name"
+        Column containing dataset split names.
+    false_positive_rate_column : str, default="false_positive_rate"
+        Column containing false positive rates.
+    true_positive_rate_column : str, default="true_positive_rate"
+        Column containing true positive rates.
+    auc_column : str, default="auc"
+        Column containing AUC values.
+    dataset_name : str, default="test"
+        Dataset split to plot.
+    log : Callable[[str], None] | Path | str | None, default=None
+        Logger compatible with emit_log.
+
+    Returns
+    -------
+    Figure
+        Matplotlib figure.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_roc_curve_started",
+                "rows": df_roc_curve_artifact.shape[0],
+                "dataset_name": dataset_name,
+            },
+        )
+
+        df_plot = df_roc_curve_artifact.copy()
+
+        required_columns = [
+            system_name_column,
+            dataset_name_column,
+            false_positive_rate_column,
+            true_positive_rate_column,
+            auc_column,
+        ]
+        missing_columns = [
+            column_name
+            for column_name in required_columns
+            if column_name not in df_plot.columns
+        ]
+        if missing_columns:
+            raise KeyError(
+                f"Missing required columns for report ROC curve: {missing_columns}"
+            )
+
+        df_plot = (
+            df_plot.loc[df_plot[dataset_name_column] == dataset_name]
+            .copy()
+        )
+
+        if df_plot.empty:
+            raise ValueError(
+                f"No ROC rows found for dataset_name='{dataset_name}'."
+            )
+
+        figure, axis = plt.subplots(figsize=(8, 6))
+
+        color_map = {
+            "model": "tab:blue",
+            "baseline": "tab:orange",
+        }
+
+        system_names = list(df_plot[system_name_column].dropna().unique())
+        for system_name in system_names:
+            df_system = (
+                df_plot.loc[df_plot[system_name_column] == system_name]
+                .sort_values(false_positive_rate_column)
+                .copy()
+            )
+
+            auc_value = float(df_system[auc_column].iloc[0])
+
+            axis.plot(
+                df_system[false_positive_rate_column],
+                df_system[true_positive_rate_column],
+                linewidth=2,
+                color=color_map.get(system_name.lower(), "tab:gray"),
+                label=f"{system_name} (AUC={auc_value:.3f})",
+            )
+
+        axis.plot(
+            [0.0, 1.0],
+            [0.0, 1.0],
+            linestyle="--",
+            linewidth=1.5,
+            color="gray",
+            alpha=0.7,
+            label="No-skill reference",
+        )
+
+        axis.set_title(f"ROC Curve — {dataset_name.capitalize()} Set")
+        axis.set_xlabel("False Positive Rate")
+        axis.set_ylabel("True Positive Rate")
+        axis.set_xlim(0, 1)
+        axis.set_ylim(0, 1)
+        axis.grid(True, alpha=0.3)
+        axis.legend()
+        figure.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_roc_curve_completed",
+                "dataset_name": dataset_name,
+                "systems": system_names,
+            },
+        )
+
+        return figure
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_roc_curve_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_report_calibration_curve(
+    df_calibration_artifact: pd.DataFrame,
+    dataset_name: str = "test",
+    system_name_column: str = "system_name",
+    dataset_name_column: str = "dataset_name",
+    predicted_probability_column: str = "predicted_probability_mean",
+    observed_default_rate_column: str = "observed_default_rate",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Figure:
+    """
+    Plot calibration curve for a single dataset split.
+
+    Parameters
+    ----------
+    df_calibration_artifact : pd.DataFrame
+        Combined calibration artifact table.
+    dataset_name : str, default="test"
+        Dataset split to plot.
+    system_name_column : str, default="system_name"
+        Column containing system names.
+    dataset_name_column : str, default="dataset_name"
+        Column containing dataset split names.
+    predicted_probability_column : str, default="predicted_probability_mean"
+        Column containing mean predicted probabilities.
+    observed_default_rate_column : str, default="observed_default_rate"
+        Column containing observed default rates.
+    log : Callable[[str], None] | Path | str | None, default=None
+        Logger compatible with emit_log.
+
+    Returns
+    -------
+    Figure
+        Matplotlib figure.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_calibration_curve_started",
+                "rows": df_calibration_artifact.shape[0],
+                "dataset_name": dataset_name,
+            },
+        )
+
+        df_plot = df_calibration_artifact.copy()
+
+        required_columns = [
+            system_name_column,
+            dataset_name_column,
+            predicted_probability_column,
+            observed_default_rate_column,
+        ]
+        missing_columns = [
+            column_name
+            for column_name in required_columns
+            if column_name not in df_plot.columns
+        ]
+        if missing_columns:
+            raise KeyError(
+                f"Missing required columns for report calibration curve: {missing_columns}"
+            )
+
+        df_plot = (
+            df_plot.loc[df_plot[dataset_name_column] == dataset_name]
+            .copy()
+        )
+
+        if df_plot.empty:
+            raise ValueError(
+                f"No calibration rows found for dataset_name='{dataset_name}'."
+            )
+
+        figure, axis = plt.subplots(figsize=(8, 6))
+
+        system_names = list(df_plot[system_name_column].dropna().unique())
+        for system_name in system_names:
+            df_system = (
+                df_plot.loc[df_plot[system_name_column] == system_name]
+                .sort_values(predicted_probability_column)
+                .copy()
+            )
+
+            axis.plot(
+                df_system[predicted_probability_column],
+                df_system[observed_default_rate_column],
+                marker="o",
+                linewidth=2,
+                label=system_name,
+            )
+
+        axis.plot(
+            [0.0, 1.0],
+            [0.0, 1.0],
+            linestyle="--",
+            linewidth=1.5,
+            label="Perfect calibration",
+        )
+
+        axis.set_title(f"Calibration Curve — {dataset_name.capitalize()} Set")
+        axis.set_xlabel("Predicted Default Probability")
+        axis.set_ylabel("Observed Default Rate")
+        axis.set_xlim(0, 1)
+        axis.set_ylim(0, 1)
+        axis.xaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+        axis.yaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+        axis.grid(True, alpha=0.3)
+        axis.legend()
+        figure.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_calibration_curve_completed",
+                "dataset_name": dataset_name,
+                "systems": system_names,
+            },
+        )
+
+        return figure
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_calibration_curve_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_report_risk_stratification(
+    df_risk_band_summary: pd.DataFrame,
+    band_column: str = "risk_band",
+    predicted_risk_column: str = "predicted_default_probability_mean",
+    observed_default_rate_column: str = "observed_default_rate",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Figure:
+    """
+    Plot predicted and observed risk across ordered risk bands.
+
+    Parameters
+    ----------
+    df_risk_band_summary : pd.DataFrame
+        Risk band summary table.
+    band_column : str, default="risk_band"
+        Column containing raw band intervals.
+    predicted_risk_column : str, default="predicted_default_probability_mean"
+        Column containing mean predicted risk.
+    observed_default_rate_column : str, default="observed_default_rate"
+        Column containing observed default rate.
+    log : Callable[[str], None] | Path | str | None, default=None
+        Logger compatible with emit_log.
+
+    Returns
+    -------
+    Figure
+        Matplotlib figure.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_risk_stratification_started",
+                "rows": df_risk_band_summary.shape[0],
+            },
+        )
+
+        df_plot = df_risk_band_summary.copy()
+
+        required_columns = [
+            band_column,
+            predicted_risk_column,
+            observed_default_rate_column,
+        ]
+        missing_columns = [
+            column_name
+            for column_name in required_columns
+            if column_name not in df_plot.columns
+        ]
+        if missing_columns:
+            raise KeyError(
+                f"Missing required columns for report risk stratification: {missing_columns}"
+            )
+
+        df_plot = (
+            df_plot.sort_values(predicted_risk_column)
+            .reset_index(drop=True)
+            .copy()
+        )
+
+        def format_band_label(interval_text: str) -> str:
+            cleaned_interval_text = (
+                interval_text
+                .replace("(", "")
+                .replace("]", "")
+            )
+            lower_bound_text, upper_bound_text = cleaned_interval_text.split(",")
+            lower_bound = float(lower_bound_text.strip())
+            upper_bound = float(upper_bound_text.strip())
+            return f"{lower_bound:.0%}–{upper_bound:.0%}"
+
+        df_plot["risk_band_label"] = (
+            df_plot[band_column]
+            .astype(str)
+            .map(format_band_label)
+        )
+
+        figure, axis = plt.subplots(figsize=(10, 6))
+
+        axis.plot(
+            df_plot["risk_band_label"],
+            df_plot[predicted_risk_column],
+            marker="o",
+            linewidth=2,
+            linestyle="--",
+            label="Predicted default probability",
+        )
+
+        axis.plot(
+            df_plot["risk_band_label"],
+            df_plot[observed_default_rate_column],
+            marker="o",
+            linewidth=2,
+            label="Observed default rate",
+        )
+
+        axis.set_title("Risk Stratification")
+        axis.set_xlabel("Predicted Default Risk Band")
+        axis.set_ylabel("Rate")
+        axis.yaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+        axis.grid(True, alpha=0.3)
+        axis.legend()
+        plt.xticks(rotation=30)
+        figure.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_risk_stratification_completed",
+                "rows": df_plot.shape[0],
+            },
+        )
+
+        return figure
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_risk_stratification_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_report_policy_frontier(
+    df_model_policy_outcomes: pd.DataFrame,
+    df_baseline_policy_outcomes: pd.DataFrame,
+    dataset_name: str = "test",
+    dataset_name_column: str = "dataset_name",
+    acceptance_rate_column: str = "acceptance_rate",
+    default_rate_column: str = "default_rate_among_accepted",
+    model_label: str = "Model threshold policy",
+    baseline_label: str = "Baseline subgrade policy",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Figure:
+    """
+    Plot policy frontier for model and baseline on a single dataset split.
+
+    Parameters
+    ----------
+    df_model_policy_outcomes : pd.DataFrame
+        Model policy outcomes table.
+    df_baseline_policy_outcomes : pd.DataFrame
+        Baseline policy outcomes table.
+    dataset_name : str, default="test"
+        Dataset split to plot.
+    dataset_name_column : str, default="dataset_name"
+        Column containing dataset split names.
+    acceptance_rate_column : str, default="acceptance_rate"
+        Column containing acceptance rates.
+    default_rate_column : str, default="default_rate_among_accepted"
+        Column containing accepted-loan default rates.
+    model_label : str, default="Model threshold policy"
+        Legend label for model line.
+    baseline_label : str, default="Baseline subgrade policy"
+        Legend label for baseline line.
+    log : Callable[[str], None] | Path | str | None, default=None
+        Logger compatible with emit_log.
+
+    Returns
+    -------
+    Figure
+        Matplotlib figure.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_policy_frontier_started",
+                "dataset_name": dataset_name,
+                "model_rows": df_model_policy_outcomes.shape[0],
+                "baseline_rows": df_baseline_policy_outcomes.shape[0],
+            },
+        )
+
+        df_model_plot = df_model_policy_outcomes.copy()
+        df_baseline_plot = df_baseline_policy_outcomes.copy()
+
+        required_columns = [
+            dataset_name_column,
+            acceptance_rate_column,
+            default_rate_column,
+        ]
+
+        for column_name in required_columns:
+            if column_name not in df_model_plot.columns:
+                raise KeyError(
+                    f"Column '{column_name}' not found in model policy outcomes."
+                )
+            if column_name not in df_baseline_plot.columns:
+                raise KeyError(
+                    f"Column '{column_name}' not found in baseline policy outcomes."
+                )
+
+        df_model_plot = (
+            df_model_plot.loc[df_model_plot[dataset_name_column] == dataset_name]
+            .sort_values(acceptance_rate_column)
+            .reset_index(drop=True)
+            .copy()
+        )
+        df_baseline_plot = (
+            df_baseline_plot.loc[df_baseline_plot[dataset_name_column] == dataset_name]
+            .sort_values(acceptance_rate_column)
+            .reset_index(drop=True)
+            .copy()
+        )
+
+        if df_model_plot.empty or df_baseline_plot.empty:
+            raise ValueError(
+                f"Missing policy rows for dataset_name='{dataset_name}'."
+            )
+
+        figure, axis = plt.subplots(figsize=(10, 6))
+
+        axis.plot(
+            df_model_plot[acceptance_rate_column],
+            df_model_plot[default_rate_column],
+            marker="o",
+            linewidth=2,
+            label=model_label,
+        )
+
+        axis.plot(
+            df_baseline_plot[acceptance_rate_column],
+            df_baseline_plot[default_rate_column],
+            marker="o",
+            linestyle="--",
+            linewidth=2,
+            label=baseline_label,
+        )
+
+        axis.set_title(f"Policy Frontier — {dataset_name.capitalize()} Set")
+        axis.set_xlabel("Acceptance Rate")
+        axis.set_ylabel("Default Rate Among Accepted Loans")
+        axis.xaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+        axis.yaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+        axis.grid(True, alpha=0.3)
+        axis.legend()
+        figure.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_policy_frontier_completed",
+                "dataset_name": dataset_name,
+            },
+        )
+
+        return figure
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_policy_frontier_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_proxy_economic_difference(
+    df_policy_comparison: pd.DataFrame,
+    acceptance_rate_column: str = "baseline_acceptance_rate",
+    value_diff_column: str = "net_value_with_opportunity_cost_diff",
+    title: str = "Proxy Economic Difference — Test Set",
+    x_label: str = "Acceptance Rate",
+    y_label: str = "Model Advantage ($, with Opportunity Cost)",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> plt.Figure:
+    """
+    Plot proxy economic difference (model - baseline) across matched policies.
+
+    This figure shows model advantage (including opportunity cost) as a function
+    of acceptance rate. It is used in the Validation notebook to identify the
+    operating region where the model outperforms the baseline.
+
+    Returns
+    -------
+    plt.Figure
+        Matplotlib figure containing the proxy economic difference plot.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_proxy_economic_difference_started",
+                "rows": df_policy_comparison.shape[0],
+                "columns": df_policy_comparison.shape[1],
+                "acceptance_rate_column": acceptance_rate_column,
+                "value_diff_column": value_diff_column,
+            },
+        )
+
+        for col in (acceptance_rate_column, value_diff_column):
+            if col not in df_policy_comparison.columns:
+                raise ValueError(f"Column '{col}' not found in policy comparison table.")
+
+        df_plot = (
+            df_policy_comparison
+            .sort_values(acceptance_rate_column)
+            .reset_index(drop=True)
+            .copy()
+        )
+
+        figure, axis = plt.subplots(figsize=(10, 6))
+
+        # Model advantage line
+        axis.plot(
+            df_plot[acceptance_rate_column],
+            df_plot[value_diff_column],
+            marker="o",
+            linewidth=2,
+            label="Model Advantage",
+        )
+
+        # Parity line (baseline reference)
+        axis.axhline(
+            y=0,
+            linestyle="--",
+            linewidth=1.5,
+            color="orange",
+            label="Baseline (parity)",
+        )
+
+        axis.set_title(title)
+        axis.set_xlabel(x_label)
+        axis.set_ylabel(y_label)
+
+        axis.set_xlim(0, 1)
+        axis.xaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+
+        axis.yaxis.set_major_formatter(
+            FuncFormatter(
+                lambda value, _: f"${value:,.0f}" if value >= 0 else f"-${abs(value):,.0f}"
+            )
+        )
+
+        axis.grid(True, alpha=0.3)
+        axis.legend()
+
+        figure.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_proxy_economic_difference_completed",
+                "rows": df_plot.shape[0],
+            },
+        )
+
+        return figure
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_proxy_economic_difference_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise

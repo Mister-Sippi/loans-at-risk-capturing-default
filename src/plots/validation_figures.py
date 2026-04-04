@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Callable
 
 import matplotlib.pyplot as plt
+from matplotlib.ticker import PercentFormatter, FuncFormatter
 import pandas as pd
 
 import config.logging as log_config
@@ -714,6 +715,506 @@ def plot_calibration_curve(
             {
                 "stage": "plot_calibration_curve_failed",
                 "dataset_name": dataset_name if "dataset_name" in locals() else "unknown",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_policy_risk_frontier(
+    df_model_policy_outcomes: pd.DataFrame,
+    df_baseline_policy_outcomes: pd.DataFrame,
+    dataset_name: str = "test",
+    dataset_name_column: str = "dataset_name",
+    acceptance_rate_column: str = "acceptance_rate",
+    default_rate_column: str = "default_rate_among_accepted",
+    model_label: str = "Model threshold policy",
+    baseline_label: str = "Baseline subgrade policy",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> plt.Figure:
+    """
+    Plot the policy risk frontier for model and baseline policies within a single dataset split.
+
+    This figure compares acceptance rate against default rate among accepted loans
+    for model-threshold and baseline-subgrade policies. It is used in the Validation
+    notebook to visualize which policy family moves more efficiently along the
+    lending risk frontier.
+
+    Parameters
+    ----------
+    df_model_policy_outcomes : pd.DataFrame
+        Model policy outcomes artifact table.
+    df_baseline_policy_outcomes : pd.DataFrame
+        Baseline policy outcomes artifact table.
+    dataset_name : str, default="test"
+        Dataset split to plot.
+    dataset_name_column : str, default="dataset_name"
+        Name of the dataset split column.
+    acceptance_rate_column : str, default="acceptance_rate"
+        Name of the acceptance rate column.
+    default_rate_column : str, default="default_rate_among_accepted"
+        Name of the accepted-loan default rate column.
+    model_label : str, default="Model threshold policy"
+        Legend label for the model policy curve.
+    baseline_label : str, default="Baseline subgrade policy"
+        Legend label for the baseline policy curve.
+    log : Callable[[str], None] | Path | str | None, default=None
+        Logger callable or log destination accepted by emit_log.
+
+    Returns
+    -------
+    plt.Figure
+        Matplotlib figure containing the policy risk frontier plot.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_policy_risk_frontier_started",
+                "dataset_name": dataset_name,
+                "model_rows": df_model_policy_outcomes.shape[0],
+                "baseline_rows": df_baseline_policy_outcomes.shape[0],
+            },
+        )
+
+        required_columns = [
+            dataset_name_column,
+            acceptance_rate_column,
+            default_rate_column,
+        ]
+
+        for column_name in required_columns:
+            if column_name not in df_model_policy_outcomes.columns:
+                raise ValueError(
+                    f"Column '{column_name}' not found in model policy outcomes table."
+                )
+            if column_name not in df_baseline_policy_outcomes.columns:
+                raise ValueError(
+                    f"Column '{column_name}' not found in baseline policy outcomes table."
+                )
+
+        df_model_split = df_model_policy_outcomes.loc[
+            df_model_policy_outcomes[dataset_name_column] == dataset_name
+        ].copy()
+
+        df_baseline_split = df_baseline_policy_outcomes.loc[
+            df_baseline_policy_outcomes[dataset_name_column] == dataset_name
+        ].copy()
+
+        if df_model_split.empty:
+            raise ValueError(
+                f"No model policy rows found for dataset_name='{dataset_name}'."
+            )
+
+        if df_baseline_split.empty:
+            raise ValueError(
+                f"No baseline policy rows found for dataset_name='{dataset_name}'."
+            )
+
+        df_model_split = (
+            df_model_split
+            .sort_values(acceptance_rate_column)
+            .reset_index(drop=True)
+            .copy()
+        )
+
+        df_baseline_split = (
+            df_baseline_split
+            .sort_values(acceptance_rate_column)
+            .reset_index(drop=True)
+            .copy()
+        )
+
+        figure, axis = plt.subplots(figsize=(10, 6))
+
+        axis.plot(
+            df_model_split[acceptance_rate_column],
+            df_model_split[default_rate_column],
+            marker="o",
+            linewidth=2,
+            label=model_label,
+        )
+
+        axis.plot(
+            df_baseline_split[acceptance_rate_column],
+            df_baseline_split[default_rate_column],
+            marker="o",
+            linestyle="--",
+            linewidth=2,
+            label=baseline_label,
+        )
+
+        axis.set_title(f"Risk Frontier — {dataset_name.capitalize()} Set")
+        axis.set_xlabel("Acceptance Rate")
+        axis.set_ylabel("Default Rate Among Accepted Loans")
+        axis.set_xlim(0, 1)
+
+        max_default_rate = max(
+            df_model_split[default_rate_column].max(),
+            df_baseline_split[default_rate_column].max(),
+        )
+
+        axis.set_ylim(0, max_default_rate * 1.10)
+        axis.grid(True, alpha=0.3)
+        axis.legend()
+
+        figure.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_policy_risk_frontier_completed",
+                "dataset_name": dataset_name,
+            },
+        )
+
+        return figure
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_policy_risk_frontier_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_proxy_economic_difference(
+    df_policy_comparison: pd.DataFrame,
+    acceptance_rate_column: str = "baseline_acceptance_rate",
+    value_diff_column: str = "net_value_with_opportunity_cost_diff",
+    title: str = "Proxy Economic Difference — Test Set",
+    x_label: str = "Acceptance Rate",
+    y_label: str = "Model Advantage ($, with Opportunity Cost)",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> plt.Figure:
+    """
+    Plot proxy economic difference (model - baseline) across matched policies.
+
+    This figure shows model advantage (including opportunity cost) as a function
+    of acceptance rate. It is used in the Validation notebook to identify the
+    operating region where the model outperforms the baseline.
+
+    Returns
+    -------
+    plt.Figure
+        Matplotlib figure containing the proxy economic difference plot.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_proxy_economic_difference_started",
+                "rows": df_policy_comparison.shape[0],
+                "columns": df_policy_comparison.shape[1],
+                "acceptance_rate_column": acceptance_rate_column,
+                "value_diff_column": value_diff_column,
+            },
+        )
+
+        for col in (acceptance_rate_column, value_diff_column):
+            if col not in df_policy_comparison.columns:
+                raise ValueError(f"Column '{col}' not found in policy comparison table.")
+
+        df_plot = (
+            df_policy_comparison
+            .sort_values(acceptance_rate_column)
+            .reset_index(drop=True)
+            .copy()
+        )
+
+        figure, axis = plt.subplots(figsize=(10, 6))
+
+        # Model advantage line
+        axis.plot(
+            df_plot[acceptance_rate_column],
+            df_plot[value_diff_column],
+            marker="o",
+            linewidth=2,
+            label="Model Advantage",
+        )
+
+        # Parity line (baseline reference)
+        axis.axhline(
+            y=0,
+            linestyle="--",
+            linewidth=1.5,
+            color="orange",
+            label="Baseline (parity)",
+        )
+
+        axis.set_title(title)
+        axis.set_xlabel(x_label)
+        axis.set_ylabel(y_label)
+
+        axis.set_xlim(0, 1)
+        axis.xaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+
+        axis.yaxis.set_major_formatter(
+            FuncFormatter(
+                lambda value, _: f"${value:,.0f}" if value >= 0 else f"-${abs(value):,.0f}"
+            )
+        )
+
+        axis.grid(True, alpha=0.3)
+        axis.legend()
+
+        figure.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_proxy_economic_difference_completed",
+                "rows": df_plot.shape[0],
+            },
+        )
+
+        return figure
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_proxy_economic_difference_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_risk_band_default_profile(
+    df_risk_band_summary: pd.DataFrame,
+    band_column: str,
+    observed_default_rate_column: str,
+    predicted_risk_column: str,
+    log: Callable[[str], None] | Path | str | None = None,
+):
+    """
+    Plot observed default rate and predicted risk across risk bands.
+
+    Parameters
+    ----------
+    df_risk_band_summary : pd.DataFrame
+        Risk band summary table.
+    band_column : str
+        Column representing risk bands (raw intervals).
+    observed_default_rate_column : str
+        Column with observed default rate.
+    predicted_risk_column : str
+        Column with predicted mean risk.
+    log : Callable | Path | str | None
+        Logger compatible with emit_log.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Figure object.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_risk_band_default_profile_started",
+                "rows": df_risk_band_summary.shape[0],
+            },
+        )
+
+        df = df_risk_band_summary.copy()
+
+        # Create clean band labels (Band 1 ... Band N)
+        df = df.sort_values(predicted_risk_column).reset_index(drop=True)
+        df["risk_band_label"] = [f"Band {i+1}" for i in range(len(df))]
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        ax.plot(
+            df["risk_band_label"],
+            df[observed_default_rate_column],
+            marker="o",
+            linewidth=2,
+            label="Observed default rate",
+        )
+
+        ax.plot(
+            df["risk_band_label"],
+            df[predicted_risk_column],
+            marker="o",
+            linestyle="--",
+            linewidth=2,
+            label="Predicted default probability",
+        )
+
+        ax.set_title("Risk Band Default Profile")
+        ax.set_xlabel("Risk Band")
+        ax.set_ylabel("Rate")
+
+        ax.yaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+        plt.xticks(rotation=30)
+
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+
+        fig.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_risk_band_default_profile_completed",
+            },
+        )
+
+        return fig
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_risk_band_default_profile_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_risk_band_interest_rate_profile(
+    df_risk_band_summary: pd.DataFrame,
+    band_column: str,
+    mean_interest_rate_column: str,
+    median_interest_rate_column: str,
+    predicted_risk_column: str = "predicted_default_probability_mean",
+    log: Callable[[str], None] | Path | str | None = None,
+):
+    """
+    Plot mean and median interest rate across risk bands.
+
+    Parameters
+    ----------
+    df_risk_band_summary : pd.DataFrame
+        Risk band summary table.
+    band_column : str
+        Column representing risk bands (raw intervals).
+    mean_interest_rate_column : str
+        Column containing mean interest rate per risk band.
+    median_interest_rate_column : str
+        Column containing median interest rate per risk band.
+    predicted_risk_column : str, default="predicted_default_probability_mean"
+        Column used to enforce low-to-high risk ordering before plotting.
+    log : Callable | Path | str | None
+        Logger compatible with emit_log.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        Figure object.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_risk_band_interest_rate_profile_started",
+                "rows": df_risk_band_summary.shape[0],
+                "band_column": band_column,
+                "mean_interest_rate_column": mean_interest_rate_column,
+                "median_interest_rate_column": median_interest_rate_column,
+                "predicted_risk_column": predicted_risk_column,
+            },
+        )
+
+        df = df_risk_band_summary.copy()
+
+        required_columns = [
+            band_column,
+            mean_interest_rate_column,
+            median_interest_rate_column,
+            predicted_risk_column,
+        ]
+
+        missing_columns = [
+            column_name
+            for column_name in required_columns
+            if column_name not in df.columns
+        ]
+
+        if missing_columns:
+            raise KeyError(
+                f"Missing required columns for risk band interest rate plot: {missing_columns}"
+            )
+
+        df = (
+            df.sort_values(predicted_risk_column)
+            .reset_index(drop=True)
+            .copy()
+        )
+
+        def format_band_label(interval_text: str) -> str:
+            cleaned_interval_text = (
+                interval_text
+                .replace("(", "")
+                .replace("]", "")
+            )
+            lower_bound_text, upper_bound_text = cleaned_interval_text.split(",")
+            lower_bound = float(lower_bound_text.strip())
+            upper_bound = float(upper_bound_text.strip())
+            return f"{lower_bound:.0%}–{upper_bound:.0%}"
+
+        df["risk_band_label"] = (
+            df[band_column]
+            .astype(str)
+            .map(format_band_label)
+        )
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        ax.plot(
+            df["risk_band_label"],
+            df[mean_interest_rate_column],
+            marker="o",
+            linewidth=2,
+            label="Mean interest rate",
+        )
+
+        ax.plot(
+            df["risk_band_label"],
+            df[median_interest_rate_column],
+            marker="o",
+            linestyle="--",
+            linewidth=2,
+            label="Median interest rate",
+        )
+
+        ax.set_title("Risk Band Interest Rate Profile")
+        ax.set_xlabel("Predicted Default Probability Band")
+        ax.set_ylabel("Interest Rate")
+
+        ax.yaxis.set_major_formatter(PercentFormatter(xmax=1.0))
+        plt.xticks(rotation=30)
+
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+
+        fig.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_risk_band_interest_rate_profile_completed",
+                "rows": df.shape[0],
+            },
+        )
+
+        return fig
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_risk_band_interest_rate_profile_failed",
                 "error_type": type(exc).__name__,
                 "error_message": str(exc),
             },

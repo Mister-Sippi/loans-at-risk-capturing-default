@@ -1,12 +1,112 @@
 from __future__ import annotations
 
-from typing import Callable, Sequence
+from typing import Callable
 from pathlib import Path
 
 import pandas as pd
 
 import config.logging as log_config
-import modeling.evaluate_models as em
+
+
+def build_terminal_cohort_summary(
+    df_train: pd.DataFrame,
+    df_test: pd.DataFrame,
+    target_column: str = "target_default",
+    split_column: str = "split",
+    log: Callable[[str], None] | Path | str | None = None,
+) -> pd.DataFrame:
+    """
+    Build a summary table for the realized-outcome terminal cohort.
+
+    This function summarizes the training and testing terminal cohorts after
+    filtering to loans with realized outcomes and constructing the binary
+    default target. It reports row counts, default counts, non-default counts,
+    and default rates for each split.
+
+    Parameters
+    ----------
+    df_train : pd.DataFrame
+        Training cohort restricted to realized repayment outcomes.
+    df_test : pd.DataFrame
+        Testing cohort restricted to realized repayment outcomes.
+    target_column : str, default="target_default"
+        Name of the binary target column.
+    split_column : str, default="split"
+        Name of the split identifier column in the output summary.
+    log : Callable | Path | str | None, default=None
+        Logger compatible with emit_log.
+
+    Returns
+    -------
+    pd.DataFrame
+        Summary table with one row per split.
+
+    Notes
+    -----
+    This function assumes that target construction has already been completed.
+    It does not create or modify the target column.
+    """
+    try:
+        required_dataframes = {
+            "df_train": df_train,
+            "df_test": df_test,
+        }
+
+        for dataframe_name, dataframe in required_dataframes.items():
+            if target_column not in dataframe.columns:
+                raise KeyError(
+                    f"build_terminal_cohort_summary: missing required column "
+                    f"'{target_column}' in {dataframe_name}"
+                )
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "build_terminal_cohort_summary_started",
+                "train_rows": df_train.shape[0],
+                "test_rows": df_test.shape[0],
+                "target_column": target_column,
+            },
+        )
+
+        summary_rows = []
+
+        for split_name, dataframe in [("train", df_train), ("test", df_test)]:
+            target_series = dataframe[target_column].copy()
+
+            summary_rows.append(
+                {
+                    split_column: split_name,
+                    "rows": int(dataframe.shape[0]),
+                    "default_count": int(target_series.sum()),
+                    "non_default_count": int((1 - target_series).sum()),
+                    "default_rate": float(target_series.mean()),
+                }
+            )
+
+        df_summary = pd.DataFrame(summary_rows).copy()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "build_terminal_cohort_summary_completed",
+                "rows": df_summary.shape[0],
+                "columns": df_summary.shape[1],
+            },
+        )
+
+        return df_summary
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "build_terminal_cohort_summary_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
 
 
 def build_modeling_population_summary_table(

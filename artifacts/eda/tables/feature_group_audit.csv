@@ -1,13 +1,13 @@
 feature_group,grouped_feature_count,present_feature_count,missing_feature_count,dataset_split,table_name,feature_name,present_in_dataset
 application_profile,3.0,3.0,0.0,train,coverage_summary,,
-credit_history,7.0,6.0,1.0,train,coverage_summary,,
+credit_history,7.0,7.0,0.0,train,coverage_summary,,
 debt_burden,6.0,6.0,0.0,train,coverage_summary,,
 loan_structure,3.0,3.0,0.0,train,coverage_summary,,
 recent_credit_behavior,7.0,7.0,0.0,train,coverage_summary,,
 reporting_shifts_data_quality,3.0,0.0,3.0,train,coverage_summary,,
 target_definition_and_cohort,2.0,2.0,0.0,train,coverage_summary,,
 application_profile,3.0,3.0,0.0,test,coverage_summary,,
-credit_history,7.0,6.0,1.0,test,coverage_summary,,
+credit_history,7.0,7.0,0.0,test,coverage_summary,,
 debt_burden,6.0,6.0,0.0,test,coverage_summary,,
 loan_structure,3.0,3.0,0.0,test,coverage_summary,,
 recent_credit_behavior,7.0,7.0,0.0,test,coverage_summary,,
@@ -19,7 +19,7 @@ application_profile,,,,train,feature_group_summary,home_ownership,True
 credit_history,,,,train,feature_group_summary,acc_now_delinq,True
 credit_history,,,,train,feature_group_summary,collections_12_mths_ex_med,True
 credit_history,,,,train,feature_group_summary,delinq_2yrs,True
-credit_history,,,,train,feature_group_summary,earliest_cr_line,False
+credit_history,,,,train,feature_group_summary,earliest_cr_line,True
 credit_history,,,,train,feature_group_summary,open_acc,True
 credit_history,,,,train,feature_group_summary,pub_rec,True
 credit_history,,,,train,feature_group_summary,total_acc,True
@@ -50,7 +50,7 @@ application_profile,,,,test,feature_group_summary,home_ownership,True
 credit_history,,,,test,feature_group_summary,acc_now_delinq,True
 credit_history,,,,test,feature_group_summary,collections_12_mths_ex_med,True
 credit_history,,,,test,feature_group_summary,delinq_2yrs,True
-credit_history,,,,test,feature_group_summary,earliest_cr_line,False
+credit_history,,,,test,feature_group_summary,earliest_cr_line,True
 credit_history,,,,test,feature_group_summary,open_acc,True
 credit_history,,,,test,feature_group_summary,pub_rec,True
 credit_history,,,,test,feature_group_summary,total_acc,True

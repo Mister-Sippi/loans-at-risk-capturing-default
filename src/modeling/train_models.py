@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Callable, Optional, Dict, Any, Tuple
+from typing import Callable
 import warnings
 
 import pandas as pd
@@ -687,6 +687,7 @@ def train_catboost(
     l2_leaf_reg: float = 3.0,
     loss_function: str = "Logloss",
     eval_metric: str = "AUC",
+    allow_writing_files: bool = False,
     verbose: bool | int = False,
 ) -> tuple[CatBoostClassifier, dict[str, object]]:
     """
@@ -853,6 +854,7 @@ def train_catboost(
             "l2_leaf_reg": l2_leaf_reg,
             "loss_function": loss_function,
             "eval_metric": eval_metric,
+            "allow_writing_files": allow_writing_files,
             "verbose": verbose,
         }
 

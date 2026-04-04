@@ -30,6 +30,7 @@
         "l2_leaf_reg": 5.991263083142513,
         "loss_function": "Logloss",
         "eval_metric": "AUC",
+        "allow_writing_files": false,
         "verbose": false,
         "border_count": 54,
         "random_strength": 0.5957258841562629

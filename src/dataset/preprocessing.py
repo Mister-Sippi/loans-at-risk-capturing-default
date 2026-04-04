@@ -6,6 +6,7 @@ from typing import Callable, Iterable, Mapping
 import pandas as pd
 
 import config.logging as log_config
+import features.feature_utils as fu
 
 
 # =============================================================================
@@ -716,7 +717,7 @@ def align_numeric_dtypes_between_train_test(
         if coerced_columns:
             log_config.emit_log(
                 log,
-                "[align_numeric_dtypes_between_train_test] columns=" + _format_column_list(coerced_columns)
+                "[align_numeric_dtypes_between_train_test] columns=" + fu._format_column_list(coerced_columns)
             )
 
         return aligned_train, aligned_test
