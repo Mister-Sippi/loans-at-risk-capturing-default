@@ -1,130 +1,126 @@
-# Loans at Risk: Capturing Default
+# LOANS AT RISK: CAPTURING DEFAULT
 
-### Predicting Loan Default at Origination
+**Full Report (PDF):** [View Report](link-to-pdf)
 
-In this project, the primary modeling goal is to predict whether a borrower is likely to default **at the time of loan application**, using only information available at origination (income, debt-to-income ratio, credit history, loan amount, employment, and other application-time features).
+**Portfolio Page:** [View Project Overview](link-to-github-pages)
 
-Predicting default at this stage provides actionable insights for financial institutions. Rather than simply issuing a “yes/no” decision, these predictions inform **risk-based lending and pricing decisions**. For example, a borrower identified as high-risk might be offered a smaller loan, additional collateral, or financial counseling, while low-risk applicants can receive competitive terms.
+---
 
-Interpretability is critical. Decisions cannot rely solely on a black-box model; the most influential factors — such as high debt-to-income ratio or limited credit history — must be communicated clearly. This ensures that lending decisions are **defensible, transparent, and aligned with regulatory requirements**, while also allowing financial institutions to optimize portfolio performance and manage credit risk proactively.
+## Table of Contents
 
-### Research Question
+- [Project Background](#project-background)
+- [Problem &amp; Evaluation Framework](#problem--evaluation-framework)
+- [Executive Summary](#executive-summary)
+- [Data &amp; Constraints](#data--constraints)
+- [Data Governance](#data-governance)
+- [Approach](#approach)
+- [Results](#results)
+- [Implications](#implications)
+- [Repository Structure](#repository-structure)
+- [Setup](#setup)
 
-How well did LendingClub's internal grading system capture borrower risk, and can a model built using only information available at the time of application match or improve that classification?
+---
 
-1. Does LendingClub's grading system successfully separate borrowers into groups with different realized default risk?
-2. Do borrower characteristics available at the time of application show systematic differences in realized default outcomes?
+## Project Background
 
-### Dataset
+Can lending decisions be improved using only the information available at the moment a borrower applies—and can this outperform a lender's internal risk grading system? This project evaluates that question using historical data from LendingClub, a U.S.-based consumer lender that originally operated as a marketplace platform. Borrowers submitted loan applications, while capital was provided by retail and institutional investors who selected loans to fund. Loans were originated through a partner bank and then made available to investors, meaning that LendingClub primarily intermediated external capital rather than taking credit risk on its own balance sheet. Within this structure, LendingClub assigned internal risk grades that determined both loan pricing and how investor capital was allocated across borrowers. The grading system therefore functioned not only as a risk assessment tool, but as a mechanism for directing capital under uncertainty. This context is central to the analysis. The project does not evaluate prediction in isolation, but whether application-time information can be structured in a way that leads to **better capital allocation decisions** than the platform's existing grading system.
 
-The raw LendingClub loan dataset is publicly available for download [here](https://www.lendingclub.com/info/download-data.action). For this project:
+---
 
-- **Training data:** Loans issued from **2007–2014**, which I clean and preprocess myself.
-- **Test data:** Loans issued in **2015**, kept separate to evaluate model performance.
-- **Raw data only:** No preprocessed LendingClub datasets are used — all cleaning and transformation are performed as part of this project to demonstrate end-to-end reproducibility.
-- **Data dictionary included:** I reference the LendingClub data dictionary to understand each variable, identify post-loan features, and flag columns that could introduce leakage.
+## Problem & Evaluation Framework
 
+The objective is to evaluate whether borrower-level information available at the time of application can improve lending decisions relative to LendingClub's underwriting system. The focus is not prediction in isolation, but whether improved risk ordering translates into better capital allocation. The analysis is conducted under realistic constraints. Only issued loans are observed, as rejected applications could not be retrieved and do not have realized outcomes. The evaluation therefore operates within LendingClub's historical acceptance boundary. All features are restricted to application-time information, ensuring that the model uses the same information set available during underwriting. To evaluate decisions, a constrained economic proxy is used. Predictions are mapped back to individual loans using a stable row identifier, allowing decisions to be aligned with realized outcomes and loan amounts. Accepted defaults represent loss exposure, while rejected performing loans represent opportunity cost. Outcomes are aggregated across the loan portfolio and compared across decision thresholds. These results reflect relative differences in allocation efficiency rather than full profitability. A full economic model is not constructed. Interest income, recovery rates, funding costs, and timing of cash flows are not consistently observable in the available data and would require additional assumptions. The proxy framework therefore prioritizes comparability and avoids introducing unverified modeling assumptions. Results should be interpreted as directional rather than as complete measures of profitability.
 
-Dataset source: LendingClub historical loan data (2007–2018)
+---
 
-The dataset originates from LendingClub's historical data releases.
-Because the original LendingClub download portal is no longer publicly accessible,
-the files used in this project were obtained from a preserved mirror of the
-original LendingClub CSV releases.
+## Executive Summary
 
-Dataset: LendingClub Historical Loan Data (2007–2015)
+This project evaluates whether borrower-level information available at application can improve lending decisions relative to a lender's internal grading system. A gradient boosting model (CatBoost) improves borrower risk ranking (**AUC 0.723** vs **0.692**), but the impact of this improvement depends entirely on how decisions are made. Three operating regimes emerge:
 
-The dataset originates from LendingClub’s historical loan data releases.
-The files were obtained from a public mirror of the original dataset.
+- **Low acceptance (~37%)** Both the model and the baseline produce negative outcomes. The model reduces losses by **USD ~27 million** by rejecting more high-risk borrowers, but does not create profitability.
+- **Mid-range acceptance (~66–84%)** This is where the model matters. In this region, borrower risk is most uncertain and decisions are most sensitive to ranking. The model improves outcomes by **USD ~11–15 million** by reducing default exposure while retaining more performing loans.
+- **High acceptance (>~85%)**
+  Differences diminish as most borrowers are accepted. Improved ranking has limited effect.
 
-Files included in the download:
+The key result is that the model does not introduce new predictive information. It reorganizes existing borrower data into a structure that enables more precise control over lending decisions. Its value is concentrated in the mid-risk region, where small improvements in ranking translate into meaningful differences in capital allocation. This implies that model deployment is not primarily a modeling problem, but a **policy problem**. The model provides a mechanism to adjust risk tolerance and manage trade-offs between default exposure and lending volume, but its effectiveness depends on selecting an appropriate operating threshold.
 
-- loan_data_2007-2014.csv
-- loan_data_2015.csv
-- LCDataDictionary.xlsx
-- loan_data_2007-2014_preprocessed.csv
+---
 
-The preprocessed dataset was not used in this project. All data preparation
-and feature construction were performed independently in the ETL pipeline
-to ensure transparency and reproducibility.
+## Data & Constraints
 
-https://web.archive.org/web/20160911194705/https://www.lendingclub.com/info/download-data.action
+The analysis uses anonymized historical LendingClub data containing borrower characteristics, loan attributes, and realized outcomes for issued loans. The dataset reflects actual lending decisions and therefore represents a constrained view of the applicant population. Only issued loans are available. Rejected applications could not be retrieved and do not have observable outcomes, limiting the analysis to LendingClub's historical acceptance boundary. This restricts conclusions to relative improvements within accepted loans rather than across the full applicant pool. The dataset spans multiple origination vintages with varying reporting quality. Some variables exhibit systematic missingness patterns across vintages. These patterns align with changes in LendingClub's reporting practices over time rather than underlying borrower behavior. Missingness in these variables is therefore interpreted as a reporting artifact, not as an indicator of credit risk. A temporal split is applied (**2007–2014** for **training**, **2015** for **testing**) to preserve a forward-looking evaluation structure and reflect how models would perform on new vintages. A small subset of issued loans is labeled as not meeting LendingClub's credit policy but was funded nonetheless. Although limited in number, these loans indicate that the underwriting boundary is not strictly enforced and provide an additional view on how risk is handled at the margin.
 
-SOURCE: https://web.archive.org/web/20160911194705/https://www.lendingclub.com/info/download-data.action
+---
 
-### Rejected Loan Applications
+## Data Governance
 
-LendingClub also provides datasets containing rejected loan applications.
-These records were not included in the analysis.
+The feature space is explicitly governed to align with the application-time constraint and avoid leakage or unintended bias. Variables not observable at origination are removed, forward-looking variables are excluded, and LendingClub outputs are retained only as benchmarks. Missingness in credit timing variables is treated as signal rather than discarded where it reflects borrower behavior, while variables affected by reporting changes are not interpreted as risk indicators. Geographic variables are removed to reduce the risk of proxy discrimination.
 
-Rejected applications contain information about borrowers who were screened
-out during the underwriting process. As such, they can provide insight into
-LendingClub’s acceptance criteria and risk tolerance.
+| Category   | Description                                      | Decision Impact                               |
+| ---------- | ------------------------------------------------ | --------------------------------------------- |
+| Dropped    | Not available at application                     | Prevents leakage                              |
+| Excluded   | Forward-looking or post-loan variables           | Maintains temporal validity                   |
+| Benchmark  | LendingClub outputs (e.g., grade, interest rate) | Enables comparison with underwriting system   |
+| Recency    | Missingness encoded as signal                    | Preserves behavioral information              |
+| Geographic | Location-based variables removed                 | Reduces risk of discrimination and proxy bias |
 
-However, rejected loans do not have observed repayment outcomes because the
-loans were never issued. This means they cannot be used to estimate default
-risk directly or to evaluate predictive models.
+---
 
-Including rejected applications would therefore introduce a fundamental
-limitation: the model could not be validated against realized outcomes.
+## Approach
 
-For this reason, the analysis focuses on issued loans with known repayment
-outcomes. This allows the project to evaluate whether borrower information
-available at the time of application can reproduce or improve LendingClub’s
-risk classification.
+The analysis is structured as a controlled evaluation of whether application-time information can support better lending decisions under realistic constraints. The design separates three distinct problems:
 
-The rejected application dataset remains valuable for studying underwriting
-policies and acceptance boundaries, but incorporating it would require
-additional techniques such as reject inference, which are outside the scope
-of this project.
+1. **Data validity**
+   The dataset is validated to ensure that repayment outcomes are well-defined, that the temporal structure supports out-of-sample evaluation, and that reporting artifacts are identified rather than misinterpreted as borrower signal.
+2. **Predictive structure**
+   Submission-time features are evaluated to determine whether they contain systematic and economically plausible differences in default risk. Multiple model classes are compared to assess whether increased flexibility reveals additional signal or reorganizes existing information.
+3. **Decision impact**
+   Model outputs are translated into acceptance policies using probability thresholds and evaluated against the existing grading system. Outcomes are assessed in terms of error structure and exposure rather than classification metrics alone.
 
-### Dataset Scope
+This structure enforces the application-time constraint, prevents information leakage, and ensures that model performance is evaluated in terms of its effect on lending decisions rather than in isolation.
 
-The LendingClub historical dataset includes loan records through 2016.
-However, only the first two quarters of 2016 are available in the archived
-releases.
+---
 
-These partial-year records were not included in the analysis. Loans issued
-in 2016 would not have sufficient time to reach a terminal repayment outcome
-(default or full repayment) within the dataset period, which would introduce
-outcome censoring.
+## Results
 
-To ensure consistent and fully observed loan outcomes, the dataset used in
-this project is limited to loans issued between 2007 and 2015.
+The model improves capital allocation primarily in the mid-risk region, where LendingClub's grading system is least precise. The dataset provides a stable and interpretable representation of the lending process. Borrower characteristics available at application show consistent relationships with default outcomes, and default risk can be predicted with meaningful but limited precision. Risk ordering is further examined by comparing LendingClub's pricing and policy decisions to observed default outcomes. While higher grades and subgrades are associated with higher default rates, the relationship is not fully consistent. Variation in default outcomes within subgrades is not always matched by differences in interest rates, indicating that pricing does not fully reflect differences in borrower risk at this level. A small subset of loans labeled as not meeting LendingClub's credit policy but issued anyway is also examined. Although limited in number, these loans indicate that the underwriting boundary is not strictly enforced and provide an additional test of how risk is handled at the margin. Model performance improves with flexibility, but gains are inconsistent rather than structural. This suggests that remaining prediction error is driven by information not observable at application rather than by model limitations. The decision analysis shows that improved ranking matters most where borrower risk is uncertain and decisions are marginal. In these regions, better ordering leads to improved allocation outcomes. Outside these regions, the impact diminishes.
 
-The data is then split chronologically:
+---
 
-- **Training dataset:** loans issued between 2007 and 2014
-- **Testing dataset:** loans issued in 2015
+## Implications
 
+The model does not create new information about borrower risk. It reorganizes existing information into a structure that allows more precise control over lending decisions. Its value is therefore not in prediction alone, but in how it changes decisions under uncertainty. The main benefit emerges in the mid-risk region, where borrower density is highest and decisions are most sensitive to ranking. In this setting, improved ordering directly affects which loans are accepted or rejected, leading to measurable differences in capital allocation. Outside this region, the impact is limited. When acceptance is very low, both strategies lose money and the model mainly reduces losses. When acceptance is very high, most borrowers are accepted and improved ranking has little effect. This implies that model deployment is a policy decision rather than a technical one. The model provides a mechanism to adjust risk tolerance and control trade-offs between default exposure and lending volume, but it does not remove uncertainty. Its usefulness depends on selecting and maintaining an operating threshold that reflects the desired balance between risk and opportunity.
 
+---
 
-### Raw data files
+## Repository Structure
 
-The archived LendingClub dataset was downloaded with
-original filenames such as:
+- `notebooks/` – ETL, EDA, Modeling, and Validation stages
+- `src/` – modules for data preprocessing, feature engineering, modeling, and plotting
+- `data/` – raw, interim, and processed datasets
+- `artifacts/` – figures, tables, and evaluation outputs
+- `logs/` – execution logs
 
-- LoanStats3a.csv
-- LoanStats3b.csv
-- LoanStats3c.csv
-- LoanStats3d.csv
+---
 
-For clarity these files were renamed in the `data/external` directory:
+## Setup
 
-| Original file   | Project filename        |
-| --------------- | ----------------------- |
-| LoanStats3a.csv | loan_data_2007_2011.csv |
-| LoanStats3b.csv | loan_data_2012_2013.csv |
-| LoanStats3c.csv | loan_data_2014.csv      |              |                         |
-| LoanStats3d.csv | loan_data_2015.csv      |
+Install dependencies:
 
-### Workflow
+```bash
+pip install -r requirements.txt
+```
 
-The project follows a structured **ETL and analysis workflow**, implemented across four notebooks:
+Key libraries include:
 
-1. **Notebook 1 – ETL:** Load raw CSV data, inspect for missing values, constants, type inconsistencies, and potential leakage columns using the data dictionary; clean and transform the dataset for downstream analysis.
-2. **Notebook 2 – Exploratory Data Analysis (EDA):** Investigate distributions, correlations, and relationships in the cleaned dataset to generate insights and inform feature engineering.
-3. **Notebook 3 – Feature Engineering & Modeling:** Create predictive features, train and evaluate models, and interpret results to provide actionable recommendations.
-4. **Notebook 4 – Validation:** Assess model performance on the test set, ensure generalizability, and validate robustness of predictions.
+pandas, numpy
+scikit-learn
+catboost
+matplotlib, plotly
 
-> Optional extension: Mid-loan default prediction could also be explored, using post-loan information such as payment history or remaining principal, to provide an **early-warning system**. This is beyond the scope of the current ETL workflow but demonstrates awareness of dynamic risk modeling opportunities.
+Run notebooks in order:
+
+1. ETL
+2. EDA
+3. Modeling
+4. Validation

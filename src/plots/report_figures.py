@@ -680,33 +680,6 @@ def plot_report_roc_curve(
     dataset_name: str = "test",
     log: Callable[[str], None] | Path | str | None = None,
 ) -> Figure:
-    """
-    Plot ROC curves for the model and baseline on a single dataset split.
-
-    Parameters
-    ----------
-    df_roc_curve_artifact : pd.DataFrame
-        Combined ROC artifact table.
-    system_name_column : str, default="system_name"
-        Column containing system names.
-    dataset_name_column : str, default="dataset_name"
-        Column containing dataset split names.
-    false_positive_rate_column : str, default="false_positive_rate"
-        Column containing false positive rates.
-    true_positive_rate_column : str, default="true_positive_rate"
-        Column containing true positive rates.
-    auc_column : str, default="auc"
-        Column containing AUC values.
-    dataset_name : str, default="test"
-        Dataset split to plot.
-    log : Callable[[str], None] | Path | str | None, default=None
-        Logger compatible with emit_log.
-
-    Returns
-    -------
-    Figure
-        Matplotlib figure.
-    """
     try:
         log_config.emit_log(
             log,
@@ -736,10 +709,9 @@ def plot_report_roc_curve(
                 f"Missing required columns for report ROC curve: {missing_columns}"
             )
 
-        df_plot = (
-            df_plot.loc[df_plot[dataset_name_column] == dataset_name]
-            .copy()
-        )
+        df_plot = df_plot.loc[
+            df_plot[dataset_name_column] == dataset_name
+        ].copy()
 
         if df_plot.empty:
             raise ValueError(
@@ -748,12 +720,8 @@ def plot_report_roc_curve(
 
         figure, axis = plt.subplots(figsize=(8, 6))
 
-        color_map = {
-            "model": "tab:blue",
-            "baseline": "tab:orange",
-        }
-
         system_names = list(df_plot[system_name_column].dropna().unique())
+
         for system_name in system_names:
             df_system = (
                 df_plot.loc[df_plot[system_name_column] == system_name]
@@ -763,20 +731,31 @@ def plot_report_roc_curve(
 
             auc_value = float(df_system[auc_column].iloc[0])
 
+            # 🔑 Robust color assignment
+            normalized_name = system_name.lower().strip()
+
+            if "baseline" in normalized_name:
+                color = "tab:orange"
+            elif "model" in normalized_name:
+                color = "tab:blue"
+            else:
+                color = "tab:gray"
+
             axis.plot(
                 df_system[false_positive_rate_column],
                 df_system[true_positive_rate_column],
                 linewidth=2,
-                color=color_map.get(system_name.lower(), "tab:gray"),
+                color=color,
                 label=f"{system_name} (AUC={auc_value:.3f})",
             )
 
+        # No-skill line (always green)
         axis.plot(
             [0.0, 1.0],
             [0.0, 1.0],
             linestyle="--",
             linewidth=1.5,
-            color="gray",
+            color="green",
             alpha=0.7,
             label="No-skill reference",
         )
@@ -788,6 +767,7 @@ def plot_report_roc_curve(
         axis.set_ylim(0, 1)
         axis.grid(True, alpha=0.3)
         axis.legend()
+
         figure.tight_layout()
 
         log_config.emit_log(
@@ -1307,6 +1287,348 @@ def plot_proxy_economic_difference(
             log,
             {
                 "stage": "plot_proxy_economic_difference_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_report_proxy_economic_comparison(
+    df_policy_comparison: pd.DataFrame,
+    *,
+    acceptance_rate_column: str,
+    value_diff_column: str,
+    title: str,
+    x_label: str,
+    y_label: str,
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Figure:
+    """
+    Plot outcome difference between the model and the baseline across
+    acceptance rates.
+
+    This is a report-level figure:
+    - focuses on relative economic difference
+    - shows where the model improves on the baseline
+    - distinguishes clearly between loss reduction and positive gains
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_proxy_economic_comparison_started",
+                "rows": df_policy_comparison.shape[0],
+                "columns": df_policy_comparison.shape[1],
+            },
+        )
+
+        required_columns = {
+            acceptance_rate_column,
+            value_diff_column,
+        }
+
+        missing_columns = required_columns - set(df_policy_comparison.columns)
+        if missing_columns:
+            raise KeyError(
+                f"Missing required columns: {sorted(missing_columns)}"
+            )
+
+        df_plot = df_policy_comparison.copy().sort_values(
+            acceptance_rate_column
+        )
+
+        figure, axis = plt.subplots(figsize=(10, 5))
+
+        axis.plot(
+            df_plot[acceptance_rate_column],
+            df_plot[value_diff_column],
+            marker="o",
+            label="Model Outcome Difference",
+        )
+
+        axis.axhline(
+            0,
+            linestyle="--",
+            color="orange",
+            label="Baseline (Parity)",
+        )
+
+        axis.set_title(title)
+        axis.set_xlabel(x_label)
+        axis.set_ylabel("Model Outcome Difference vs Baseline ($)")
+
+        axis.grid(True, alpha=0.3)
+
+        axis.yaxis.set_major_formatter(
+            FuncFormatter(lambda x, _: f"${x:,.0f}")
+        )
+        axis.xaxis.set_major_formatter(
+            PercentFormatter(xmax=1.0, decimals=0)
+        )
+
+        max_idx = df_plot[value_diff_column].idxmax()
+        max_x = df_plot.loc[max_idx, acceptance_rate_column]
+        max_y = df_plot.loc[max_idx, value_diff_column]
+
+        axis.scatter([max_x], [max_y])
+
+        axis.annotate(
+            f"Peak relative improvement: ${max_y:,.0f}",
+            (max_x, max_y),
+            textcoords="offset points",
+            xytext=(5, 5),
+        )
+
+        axis.legend()
+
+        figure.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_proxy_economic_comparison_completed",
+                "rows": df_plot.shape[0],
+                "peak_acceptance_rate": float(max_x),
+                "peak_value_diff": float(max_y),
+            },
+        )
+
+        return figure
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_proxy_economic_comparison_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def _format_report_percentage(
+    value: float
+    ) -> str:
+    """Format a decimal proportion as a percentage string."""
+    return f"{value:.1%}"
+
+
+def _format_report_currency(
+    value: float
+    ) -> str:
+    """Format a numeric value as whole-dollar currency."""
+    return f"${value:,.0f}" if value >= 0 else f"-${abs(value):,.0f}"
+
+
+def build_report_policy_comparison_table(
+    df_policy_comparison: pd.DataFrame,
+    acceptance_rate_column: str = "baseline_acceptance_rate",
+    model_threshold_column: str = "model_threshold",
+    baseline_value_column: str = "baseline_net_value_with_opportunity_cost",
+    model_value_column: str = "model_net_value_with_opportunity_cost",
+    value_diff_column: str = "net_value_with_opportunity_cost_diff",
+    default_rate_diff_column: str = "default_rate_diff",
+    top_n_rows: int = 5,
+    sort_by: str = "net_value_with_opportunity_cost_diff",
+    ascending: bool = False,
+    log: Callable[[str], None] | Path | str | None = None,
+) -> pd.DataFrame:
+    """
+    Build a compact report-ready policy comparison table.
+
+    This function keeps only the columns needed for the report conclusion and
+    formats them for display. It is intended for report presentation, not for
+    artifact export.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "build_report_policy_comparison_table_started",
+                "input_rows": df_policy_comparison.shape[0],
+                "input_columns": df_policy_comparison.shape[1],
+                "top_n_rows": top_n_rows,
+                "sort_by": sort_by,
+                "ascending": ascending,
+            },
+        )
+
+        required_columns = [
+            acceptance_rate_column,
+            model_threshold_column,
+            baseline_value_column,
+            model_value_column,
+            value_diff_column,
+            default_rate_diff_column,
+        ]
+
+        missing_columns = [
+            column_name
+            for column_name in required_columns
+            if column_name not in df_policy_comparison.columns
+        ]
+        if missing_columns:
+            raise KeyError(
+                "build_report_policy_comparison_table: missing required columns "
+                f"{missing_columns}"
+            )
+
+        if sort_by not in df_policy_comparison.columns:
+            raise KeyError(
+                f"build_report_policy_comparison_table: sort column '{sort_by}' not found."
+            )
+
+        if top_n_rows <= 0:
+            raise ValueError("top_n_rows must be greater than 0.")
+
+        df_report_table = (
+            df_policy_comparison.copy()
+            .sort_values(sort_by, ascending=ascending)
+            .head(top_n_rows)
+            .copy()
+        )
+
+        df_report_table["acceptance_rate"] = (
+            df_report_table[acceptance_rate_column].map(_format_report_percentage)
+        )
+        df_report_table["model_threshold"] = (
+            df_report_table[model_threshold_column].map(lambda value: f"{value:.2f}")
+        )
+        df_report_table["baseline_proxy_value"] = (
+            df_report_table[baseline_value_column].map(_format_report_currency)
+        )
+        df_report_table["model_proxy_value"] = (
+            df_report_table[model_value_column].map(_format_report_currency)
+        )
+        df_report_table["model_advantage"] = (
+            df_report_table[value_diff_column].map(_format_report_currency)
+        )
+        df_report_table["default_rate_gap"] = (
+            df_report_table[default_rate_diff_column].map(
+                lambda value: f"{value:+.2%}"
+            )
+        )
+
+        df_report_table = df_report_table[
+            [
+                "acceptance_rate",
+                "model_threshold",
+                "baseline_proxy_value",
+                "model_proxy_value",
+                "model_advantage",
+                "default_rate_gap",
+            ]
+        ].copy()
+
+        df_report_table = df_report_table.rename(
+            columns={
+                "acceptance_rate": "Acceptance Rate",
+                "model_threshold": "Model Threshold",
+                "baseline_proxy_value": "Baseline Proxy Value",
+                "model_proxy_value": "Model Proxy Value",
+                "model_advantage": "Model Advantage",
+                "default_rate_gap": "Default Rate Gap",
+            }
+        )
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "build_report_policy_comparison_table_completed",
+                "rows": df_report_table.shape[0],
+                "columns": df_report_table.shape[1],
+            },
+        )
+
+        return df_report_table
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "build_report_policy_comparison_table_failed",
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+        )
+        raise
+
+
+def plot_report_policy_comparison_table(
+    df_report_policy_table: pd.DataFrame,
+    title: str = "Model vs Baseline — Proxy Economic Comparison",
+    subtitle: str = (
+        "Highest model-advantage operating points using proxy economic value "
+        "with opportunity cost"
+    ),
+    log: Callable[[str], None] | Path | str | None = None,
+) -> Figure:
+    """
+    Render a compact report table as a matplotlib figure.
+
+    Intended for report export where a visual table is easier to place than a
+    raw dataframe.
+    """
+    try:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_policy_comparison_table_started",
+                "rows": df_report_policy_table.shape[0],
+                "columns": df_report_policy_table.shape[1],
+            },
+        )
+
+        if df_report_policy_table.empty:
+            raise ValueError("df_report_policy_table must not be empty.")
+
+        figure_height = 1.6 + (0.48 * df_report_policy_table.shape[0])
+        figure, axis = plt.subplots(figsize=(12, figure_height))
+        axis.axis("off")
+
+        table = axis.table(
+            cellText=df_report_policy_table.values,
+            colLabels=df_report_policy_table.columns,
+            loc="center",
+            cellLoc="center",
+            colLoc="center",
+        )
+
+        table.auto_set_font_size(False)
+        table.set_fontsize(10)
+        table.scale(1, 1.45)
+
+        for (row_index, column_index), cell in table.get_celld().items():
+            cell.set_linewidth(0.6)
+            if row_index == 0:
+                cell.set_text_props(weight="bold")
+                cell.set_height(cell.get_height() * 1.15)
+
+        axis.set_title(
+            f"{title}\n{subtitle}",
+            fontsize=12,
+            pad=16,
+        )
+
+        figure.tight_layout()
+
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_policy_comparison_table_completed",
+                "rows": df_report_policy_table.shape[0],
+            },
+        )
+
+        return figure
+
+    except Exception as exc:
+        log_config.emit_log(
+            log,
+            {
+                "stage": "plot_report_policy_comparison_table_failed",
                 "error_type": type(exc).__name__,
                 "error_message": str(exc),
             },

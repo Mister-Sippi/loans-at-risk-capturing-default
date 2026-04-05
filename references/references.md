@@ -34,7 +34,7 @@ A foundational reference in statistical learning theory. Introduces the bias–v
 
 LendingClub.
 **LendingClub Loan Data Dictionary and Loan Statistics Dataset.**
-[LendingClub Data Download Page](https://www.lendingclub.com/info/download-data.action)
+[LendingClub Data Download Page](https://web.archive.org/web/20160911194705/https://www.lendingclub.com/info/download-data.action)
 
 The LendingClub data dictionary defines the variables contained in the public loan dataset. All column definitions and loan status semantics used in this project follow the definitions provided in the official LendingClub documentation.
 
@@ -57,6 +57,13 @@ Advances in Neural Information Processing Systems (NeurIPS).
 [https://arxiv.org/abs/1706.09516](https://arxiv.org/abs/1706.09516)
 
 Introduces the CatBoost gradient boosting algorithm designed to handle categorical variables while reducing prediction shift during training.
+
+Seven Pillars Institute. (2019).
+**Peer-to-peer lending: Lending Club.**
+Seven Pillars Institute.
+[https://mail.sevenpillarsinstitute.org/peer-to-peer-lending-lending-club/](https://mail.sevenpillarsinstitute.org/peer-to-peer-lending-lending-club/)
+
+Provides an overview of LendingClub’s peer-to-peer lending model, describing how the platform connects borrowers with investors, assigns risk grades, and facilitates capital allocation without primarily taking credit risk on its own balance sheet.
 
 Thomas, L. C., Edelman, D. B., & Crook, J. N. (2017).
 **Credit Scoring and Its Applications (2nd ed.).**
