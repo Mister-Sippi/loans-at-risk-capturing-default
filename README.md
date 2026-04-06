@@ -2,8 +2,6 @@
 
 **Full Report (PDF):** [View Report](./reports/loans_at_risk_capturing_default_report.pdf)
 
-**Portfolio Page:** [View Project Overview](link-to-github-pages)
-
 ---
 
 ## Table of Contents
