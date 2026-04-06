@@ -38,12 +38,6 @@ LendingClub.
 
 The LendingClub data dictionary defines the variables contained in the public loan dataset. All column definitions and loan status semantics used in this project follow the definitions provided in the official LendingClub documentation.
 
-Ng, A. Y. (2000).
-**Model Complexity, Goodness of Fit and Diminishing Returns.**
-Advances in Neural Information Processing Systems (NeurIPS).
-
-Demonstrates that improvements in model performance tend to diminish as model complexity increases, providing a theoretical basis for observing performance plateaus across increasingly flexible model classes.
-
 Peduzzi, P., Concato, J., Kemper, E., Holford, T. R., & Feinstein, A. R. (1996).
 **A simulation study of the number of events per variable in logistic regression analysis.**
 Journal of Clinical Epidemiology, 49(12), 1373–1379.
@@ -65,8 +59,8 @@ Seven Pillars Institute.
 
 Provides an overview of LendingClub’s peer-to-peer lending model, describing how the platform connects borrowers with investors, assigns risk grades, and facilitates capital allocation without primarily taking credit risk on its own balance sheet.
 
-Thomas, L. C., Edelman, D. B., & Crook, J. N. (2017).
-**Credit Scoring and Its Applications (2nd ed.).**
+Thomas, L. C., Edelman, D. B., & Crook, J. N. (2002).
+**Credit Scoring and Its Applications (1st ed.).**
 SIAM.
 
 A foundational reference for statistical credit risk modeling. Logistic regression remains one of the most widely used models in consumer credit risk prediction due to interpretability and regulatory transparency.

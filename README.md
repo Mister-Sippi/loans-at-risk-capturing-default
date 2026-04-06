@@ -1,6 +1,6 @@
 # LOANS AT RISK: CAPTURING DEFAULT
 
-**Full Report (PDF):** [View Report](link-to-pdf)
+**Full Report (PDF):** [View Report](./reports/loans_at_risk_capturing_default_report.pdf)
 
 **Portfolio Page:** [View Project Overview](link-to-github-pages)
 
