@@ -5,7 +5,7 @@ from typing import Callable, Sequence
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
-from matplotlib.ticker import FuncFormatter, PercentFormatter
+from matplotlib.ticker import FuncFormatter, PercentFormatter, MultipleLocator
 import pandas as pd
 import numpy as np
 from sklearn.calibration import calibration_curve
@@ -1334,8 +1334,10 @@ def plot_report_proxy_economic_comparison(
                 f"Missing required columns: {sorted(missing_columns)}"
             )
 
-        df_plot = df_policy_comparison.copy().sort_values(
-            acceptance_rate_column
+        df_plot = (
+            df_policy_comparison.copy()
+            .sort_values(acceptance_rate_column)
+            .reset_index(drop=True)
         )
 
         figure, axis = plt.subplots(figsize=(10, 5))
@@ -1356,12 +1358,16 @@ def plot_report_proxy_economic_comparison(
 
         axis.set_title(title)
         axis.set_xlabel(x_label)
-        axis.set_ylabel("Model Outcome Difference vs Baseline ($)")
+        axis.set_ylabel(y_label)
 
         axis.grid(True, alpha=0.3)
 
         axis.yaxis.set_major_formatter(
-            FuncFormatter(lambda x, _: f"${x:,.0f}")
+            FuncFormatter(
+                lambda value, _: (
+                    f"${value:,.0f}" if value >= 0 else f"-${abs(value):,.0f}"
+                )
+            )
         )
         axis.xaxis.set_major_formatter(
             PercentFormatter(xmax=1.0, decimals=0)
@@ -1371,16 +1377,27 @@ def plot_report_proxy_economic_comparison(
         max_x = df_plot.loc[max_idx, acceptance_rate_column]
         max_y = df_plot.loc[max_idx, value_diff_column]
 
+        lower_y_limit = df_plot[value_diff_column].min() * 1.05
+        upper_y_limit = 60_000_000
+
+        axis.set_ylim(lower_y_limit, upper_y_limit)
+        axis.yaxis.set_major_locator(MultipleLocator(20_000_000))
+
         axis.scatter([max_x], [max_y])
 
         axis.annotate(
             f"Peak relative improvement: ${max_y:,.0f}",
-            (max_x, max_y),
+            xy=(max_x, max_y),
+            xytext=(8, 8),
             textcoords="offset points",
-            xytext=(5, 5),
+            ha="left",
+            va="bottom",
         )
 
-        axis.legend()
+        axis.legend(
+            loc="upper right",
+            bbox_to_anchor=(0.98, 0.98),
+        )
 
         figure.tight_layout()
 
@@ -1391,6 +1408,8 @@ def plot_report_proxy_economic_comparison(
                 "rows": df_plot.shape[0],
                 "peak_acceptance_rate": float(max_x),
                 "peak_value_diff": float(max_y),
+                "y_axis_lower_limit": float(lower_y_limit),
+                "y_axis_upper_limit": float(upper_y_limit),
             },
         )
 
@@ -1600,7 +1619,7 @@ def plot_report_policy_comparison_table(
         table.set_fontsize(10)
         table.scale(1, 1.45)
 
-        for (row_index, column_index), cell in table.get_celld().items():
+        for (row_index, _), cell in table.get_celld().items():
             cell.set_linewidth(0.6)
             if row_index == 0:
                 cell.set_text_props(weight="bold")
