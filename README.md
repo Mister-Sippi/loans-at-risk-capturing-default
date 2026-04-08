@@ -101,9 +101,18 @@ The model does not create new information about borrower risk. It reorganizes ex
 
 ---
 
-## Setup
+### Setup
 
-Install dependencies:
+This project requires Python 3.10+.
+
+1. Create a virtual environment:
+   python -m venv .venv
+
+2. Activate the environment:
+   source .venv/bin/activate  (Mac/Linux)
+   .venv\Scripts\activate     (Windows)
+
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
