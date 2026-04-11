@@ -6,9 +6,9 @@
 
 ## Table of Contents
 
+- [Executive Summary](#executive-summary)
 - [Project Background](#project-background)
 - [Problem &amp; Evaluation Framework](#problem--evaluation-framework)
-- [Executive Summary](#executive-summary)
 - [Data &amp; Constraints](#data--constraints)
 - [Data Governance](#data-governance)
 - [Approach](#approach)
@@ -16,6 +16,25 @@
 - [Implications](#implications)
 - [Repository Structure](#repository-structure)
 - [Setup](#setup)
+
+---
+
+## Executive Summary
+
+A predictive model built using only application-time borrower data can improve lending decisions compared to a lender's internal grading system (baseline), leading to **~USD 11–15 million better lending outcomes through improved capital allocation**, while also reducing losses in high-risk segments.
+
+The improvement in predictive performance is modest (AUC 0.723 vs 0.692), but its impact depends on how many loans are approved:
+
+**Low acceptance (~37%)**
+Both the model and the baseline produce negative outcomes. The model reduces losses by **~USD 27 million** by rejecting more high-risk borrowers, but does not create profitability.
+
+**Mid-range acceptance (~66–84%)**
+This is where the model matters. Borrower risk is most uncertain and decisions are most sensitive to ranking. The model improves outcomes by **~USD 11–15 million** by reducing default exposure while retaining more performing loans.
+
+**High acceptance (>~85%)**
+Differences diminish as most borrowers are accepted. Improved ranking has limited effect.
+
+The model does not introduce new predictive information. It reorganizes existing borrower data into a structure that enables more precise control over lending decisions. Its value is concentrated in the mid-risk region, where small improvements in ranking translate into meaningful differences in capital allocation. This implies that model deployment is not primarily a modeling problem, but a policy problem. The model provides a way to adjust risk tolerance and manage trade-offs between default exposure and lending volume, but its effectiveness depends on how strict or lenient the lender chooses to be when approving loans.
 
 ---
 
@@ -28,19 +47,6 @@ This project grew out of a curiosity about how lending systems actually work, ho
 ## Problem & Evaluation Framework
 
 The objective is to evaluate whether borrower-level information available at the time of application can improve lending decisions relative to LendingClub's underwriting system. The focus is not prediction in isolation, but whether improved risk ordering translates into better capital allocation. The analysis is conducted under realistic constraints. Only issued loans are observed, as rejected applications could not be retrieved and do not have realized outcomes. The evaluation therefore operates within LendingClub's historical acceptance boundary. All features are restricted to application-time information, ensuring that the model uses the same information set available during underwriting. To evaluate decisions, a constrained economic proxy is used. Predictions are mapped back to individual loans using a stable row identifier, allowing decisions to be aligned with realized outcomes and loan amounts. Accepted defaults represent loss exposure, while rejected performing loans represent opportunity cost. Outcomes are aggregated across the loan portfolio and compared across decision thresholds. These results reflect relative differences in allocation efficiency rather than full profitability. A full economic model is not constructed. Interest income, recovery rates, funding costs, and timing of cash flows are not consistently observable in the available data and would require additional assumptions. The proxy framework therefore prioritizes comparability and avoids introducing unverified modeling assumptions. Results should be interpreted as directional rather than as complete measures of profitability.
-
----
-
-## Executive Summary
-
-This project evaluates whether borrower-level information available at application can improve lending decisions relative to a lender's internal grading system. A gradient boosting model (CatBoost) improves borrower risk ranking (**AUC 0.723** vs **0.692**), but the impact of this improvement depends entirely on how decisions are made. Three operating regimes emerge:
-
-- **Low acceptance (~37%)** Both the model and the baseline produce negative outcomes. The model reduces losses by **USD ~27 million** by rejecting more high-risk borrowers, but does not create profitability.
-- **Mid-range acceptance (~66–84%)** This is where the model matters. In this region, borrower risk is most uncertain and decisions are most sensitive to ranking. The model improves outcomes by **USD ~11–15 million** by reducing default exposure while retaining more performing loans.
-- **High acceptance (>~85%)**
-  Differences diminish as most borrowers are accepted. Improved ranking has limited effect.
-
-The key result is that the model does not introduce new predictive information. It reorganizes existing borrower data into a structure that enables more precise control over lending decisions. Its value is concentrated in the mid-risk region, where small improvements in ranking translate into meaningful differences in capital allocation. This implies that model deployment is not primarily a modeling problem, but a **policy problem**. The model provides a mechanism to adjust risk tolerance and manage trade-offs between default exposure and lending volume, but its effectiveness depends on selecting an appropriate operating threshold.
 
 ---
 
@@ -107,11 +113,9 @@ This project requires Python 3.10+.
 
 1. Create a virtual environment:
    python -m venv .venv
-
 2. Activate the environment:
    source .venv/bin/activate  (Mac/Linux)
    .venv\Scripts\activate     (Windows)
-
 3. Install dependencies:
 
 ```bash
