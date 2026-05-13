@@ -21,7 +21,7 @@
 
 ## Executive Summary
 
-A predictive model built using only application-time borrower data can improve lending decisions compared to a lender's internal grading system (baseline), leading to **~USD 11–15 million better lending outcomes through improved capital allocation**, while also reducing losses in high-risk segments.
+A predictive model built using only application-time borrower data can improve lending decisions compared to a lender's internal grading system (baseline), leading to **~USD 12–15 million better lending outcomes through improved capital allocation**, while also reducing losses in high-risk segments.
 
 The improvement in predictive performance is modest (AUC 0.723 vs 0.692), but its impact depends on how many loans are approved:
 
@@ -29,12 +29,12 @@ The improvement in predictive performance is modest (AUC 0.723 vs 0.692), but it
 Both the model and the baseline produce negative outcomes. The model reduces losses by **~USD 27 million** by rejecting more high-risk borrowers, but does not create profitability.
 
 **Mid-range acceptance (~66–84%)**
-This is where the model matters. Borrower risk is most uncertain and decisions are most sensitive to ranking. The model improves outcomes by **~USD 11–15 million** by reducing default exposure while retaining more performing loans.
+This is where the model matters. Borrower risk is most uncertain and decisions are most sensitive to ranking. The model improves outcomes by **~USD 12–15 million** by reducing default exposure while retaining more performing loans.
 
 **High acceptance (>~85%)**
 Differences diminish as most borrowers are accepted. Improved ranking has limited effect.
 
-The model does not introduce new predictive information. It reorganizes existing borrower data into a structure that enables more precise control over lending decisions. Its value is concentrated in the mid-risk region, where small improvements in ranking translate into meaningful differences in capital allocation. This implies that model deployment is not primarily a modeling problem, but a policy problem. The model provides a way to adjust risk tolerance and manage trade-offs between default exposure and lending volume, but its effectiveness depends on how strict or lenient the lender chooses to be when approving loans.
+The model does not introduce new information. It improves how existing borrower risk is ordered, allowing lending decisions to be applied more selectively within LendingClub’s risk buckets. Its value is concentrated where approval decisions are most sensitive, making deployment less a modeling problem than a policy decision about risk tolerance.
 
 ---
 
@@ -72,7 +72,7 @@ The feature space is explicitly governed to align with the application-time cons
 
 ## Approach
 
-The analysis is structured as a controlled evaluation of whether application-time information can support better lending decisions under realistic constraints. The design separates three distinct problems:
+The analysis is structured as a controlled evaluation of whether application-time information can support better lending decisions under realistic constraints. Model classes were selected to compare an interpretable credit-scoring baseline with increasingly flexible tree-based methods: Logistic Regression as the baseline, Random Forest for nonlinear structure, and CatBoost as a modern tabular model benchmark. The design separates three distinct problems:
 
 1. **Data validity**
    The dataset is validated to ensure that repayment outcomes are well-defined, that the temporal structure supports out-of-sample evaluation, and that reporting artifacts are identified rather than misinterpreted as borrower signal.
